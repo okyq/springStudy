@@ -279,11 +279,86 @@ public String pojo(UserPojo userPojo){
 
 ## 4 域对象共享数据
 ### 4.1 使用servletAPI向request域对象共享数据
+```
+@RequestMapping("/testServletApi")  
+public String api(HttpServletRequest request){  
+    request.setAttribute("username","yuqian");  
+    return "success";  
+}
+```
+```
+<p th:text="${username}"></p>
+```
 
 ### 4.2 使用ModelAndView向request域对象共享数据
++ ModelAndView有Model和View两个功能
++ model主要用于向请求域共享数据
++ view主要用于设置视图，实现页面跳转
+```
+@RequestMapping("/testModerlAndView")  
+public ModelAndView modelAndView(){  
+     ModelAndView mad = new ModelAndView();  
+     mad.addObject("username","yuqian");  
+     mad.setViewName("success");  
+     return mad;  
+}
+```
+
 ### 4.3 使用Model向request域对象共享数据
+```
+@RequestMapping("/testModel")  
+public String model(Model model){  
+    model.addAttribute("username","yuqian");  
+    return "success";  
+}
+```
 ### 4.4 使用Map向request域对象共享数据
+```
+@RequestMapping("/testMap")  
+public String map(Map<String,Object> map){  
+    map.put("username","yuqian");  
+    return "success";  
+}
+```
 ### 4.5 使用ModelMap向request域对象共享数据
+```
+@RequestMapping("/testModelMap")  
+public String testModelMap(ModelMap modelMap){  
+    modelMap.addAttribute("username","yuqian");  
+    return "success";  
+}
+```
 ### 4.6 Model，ModelMap，Map之间的关系
+本质上都是BindingAwareModelMap类型
+```
+public  interface model{}
+public class ModelMap extends LinkedHashMap<String,Object>{}
+public class ExtendedModelMap extends ModelMap implements Model{}
+public class BindingAwareModelMap extends ExtendedModelMap{}
+```
+
 ### 4.7 向session（浏览器开启和关闭）域共享数据
+```
+@RequestMapping("/testSession")  
+public String testSession(HttpSession session){  
+    session.setAttribute("username","yuqian");  
+    return "success";  
+}
+```
+```
+<p th:text="${session.username}"></p>
+```
+
+
 ### 4.8  向application（serlvetcontext整个应用）域共享数据
+```
+@RequestMapping("/testApplication")  
+public String testApplication(HttpSession session){  
+    ServletContext application = session.getServletContext();  
+    application.setAttribute("username","yuqian");  
+    return "success";  
+}
+```
+```
+<p th:text="${application.username}"></p>
+```
