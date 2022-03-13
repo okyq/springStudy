@@ -541,3 +541,54 @@ public String deleteUser(@PathVariable("id")Integer id){
      <input type="submit" value="测试delete方法">  
 </form>
 ```
+# 7 HttpMessageConverter
+
+ + HttpMessageConverter，报文信息转换器，将请求报文转换为java对象，或将java对象转换为响应报文（浏览器向服务器发送请求报文，当服务器收到浏览器的请求后，会发送响应消息给浏览器）
+ + HttpMessageConverter提供了两个注解和两个类型：@RequestBody，@ResponseBody，@RequestEntity，@ResponseEntity
+## 7.1 @RequestBody
+@RequestBody可以获取请求体，需要在控制器方法中设置一个形参，使用@RequestBody进行标识，当前请求的请求体就会为当前注解所标识的形参赋值
+```
+<form th:action="@{/testRequestBody}" method="post">  
+     用户名：<input type="text" name="username">  
+     <input type="submit" value="测试@RequestBody">  
+</form>
+```
+```
+@RequestMapping("/testRequestBody")  
+public String testReqestBody(@RequestBody String requestBody){  
+     System.out.println("requetsBody = " + requestBody);  
+     return "success";  
+}
+```
+## 7.2 RequestEntity
+RequestEntity封装请求报文的一种类型，需要在控制器方法的形参中设置该类型的形参，当前请求的请求报文就会赋值给该形参，可以通过getHeaders()获取请求头信息，通过getBody()获取请求主体信息
+```
+@RequestMapping("/testRequestEntity")  
+public String testRequestEntity(RequestEntity<String> requestEntity){  
+    System.out.println("header:::"+requestEntity.getHeaders());  
+    System.out.println("body:::"+requestEntity.getBody());  
+    return "success";  
+}
+```
+## 7.3 @ResponseBody
+@ResponseBody用于标识一个控制器方法，可以将该方法的返回值直接作为响应报文的响应体响应到浏览器
+
++ 通过ServletAPI的response对象响应浏览器
+```
+@RequestMapping("/testResponse")  
+public void testResponse(HttpServletResponse response) throws IOException {  
+    response.getWriter().print("hello world");  
+}
+
+此时浏览器显示： hello world
+```
++ 使用@ResponseBody
+```
+@RequestMapping("/testResponseBody")  
+@ResponseBody  
+public String testResponseBody(){  
+      return "hello world";  
+}
+
+此时浏览器显示hello world
+```
