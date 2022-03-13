@@ -502,3 +502,42 @@ public String AddUser(String username){
 }
 ```
 ### 6.2.2  put和delete请求
+不能直接修改from中的method为put或者delete，此时from会用get方法发送请求
+**要先写处理编码的过滤器，在来配置HiddenHttpMethodFilter**
+```
+在web.xml中配置HiddenHttpMethodFilter
+<filter>  
+      <filter-name>HiddenHttpMethodFilter</filter-name>  
+      <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>  
+</filter>  
+<filter-mapping>  
+      <filter-name>HiddenHttpMethodFilter</filter-name>  
+      <url-pattern>/*</url-pattern>  
+</filter-mapping>
+```
+
+```
+@RequestMapping(value = "/user" ,method = RequestMethod.PUT)  
+public String updateUser(){  
+    System.out.println("修改用户信息");  
+    return "success";  
+}  
+@RequestMapping(value = "/user/{id}" ,method = RequestMethod.DELETE)  
+public String deleteUser(@PathVariable("id")Integer id){  
+    System.out.println("删除用户的id为： "+id);  
+    return "success";  
+}
+```
+```
+<form th:action="@{/user}" method="post">  
+     <input type="hidden" name="_method" value="put">  
+     用户名：<input type="text" name="username">  
+     <input type="submit" value="测试put方法">  
+</form>  
+  
+<form th:action="@{/user/1}" method="post">  
+     <input type="hidden" name="_method" value="delete">  
+      用户名：<input type="text" name="username">  
+     <input type="submit" value="测试delete方法">  
+</form>
+```
