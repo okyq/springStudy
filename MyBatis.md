@@ -186,12 +186,13 @@ parameterType：表示参数类型，指定dao方法的形参数据类型。这�
 ```
 #### 3.2.2一个简单类型的参数
 Dao接口中的方法的参数只有一个简单类型（java基本类型和String），占位符 **#{任意字符 }**，和方法名称无关
-```
+```java
 <select id="selectById" resultType="com.yq.entity.Student" parameterType="int">  
   select * from student where id = #{id}  
 </select>
 ```
 **和**
+
 ```
 <select id="selectById" resultType="com.yq.entity.Student" parameterType="int">  
   select * from student where id = #{abc}  
@@ -202,14 +203,232 @@ Dao接口中的方法的参数只有一个简单类型（java基本类型和Stri
 
 #### 3.2.3dao接口方法由多个简单类型的参数
 @Param：命名参数，在方法的形参前面使用，在mapper中使用自定义的value值代替`#{}`中的值
-```
+```java
 List<Student> selectStudentByNameOrAge(@Param("myname")String name,@Param("myage")int age);
 ```
-```
+```java
 <select id="selectStudentByNameOrAge" resultType="com.yq.entity.Student">  
   select * from student where name=#{myname} or age=#{myage}  
 </select>
 ```
 
-### 3.3 封装MyBatis输出结果
-### 3.4 模糊like
+#### 3.2.4   dao接口方法使用一个对象作为参数
+
+方法的形参是一个java对象。这个java对象表示多个参数。使用对象的属性值作为参数使用
+
++ 简单的语法：**`#{属性名}`**,bytatis会调用此属性的getXXX()方法赋值，也可以使用**自定义**对象，即为**vo层**
+
+```java
+List<Student> selectByObject(Student student);
+```
+
+```java
+<select id="selectByObject" resultType="com.yq.entity.Student">
+        select * from student where name=#{name} or age = #{age}
+</select>
+```
+
++ 复杂的写法：#{name,javaType=java.lang.String , jdbcType=VARCHAR}
+
+#### 3.2.5 dao接口中多个简单类型的参数，使用位置
+
+参数位置：从左往右，依次是：0  1  2  3... 
+
+agr0, arg1 , 依次类推....
+
+```java
+<select id="selectByPosition" resultType="com.yq.entity.Student">
+        select * from student where name=#{arg0} or age=#{arg1}
+</select>
+```
+
+```java
+List<Student> students =mapper.selectByPosition("yuqian",5);
+```
+
+#### 3.2.6 dao接口是个map
+
+mapper中写key....... name=#{key}
+
+
+
+### 3.3 #和$的区别
+
+
+
+#### 3.3.1 #占位符
+
+
+
+语法：#{字符}
+
+mybatis处理#{} 使用的jdbc对象是**PrepareStatment**
+
+```java
+<select id="selectById" resultType="com.yq.entity.Student" parameterType="int">  
+  select * from student where id = #{id}  
+</select>
+    
+mybatis创建出PrepareStatement对象，执行sql语句
+
+String sql = "select * from student where id = ?  "
+
+PrepareStatement pst = conn.PrepareStatement(sql)
+
+pst.setInt(位置,参数)即为：pst.setInt(1,1)
+
+ResultSet rs = pst.executeQuery(); 执行sql语句
+```
+
+
+
+特点：
+
++ 使用PrepareStatement执行sql语句，效率高
++ PrepareStatement能够避免sql注入
++ #{} 常常作为列值使用，位于等号右侧，#{}位置的值和数据类型有关
+
+
+
+
+
+#### 3.3.2 $ 占位符
+
+
+
+语法： ${字符}
+
+```java
+<select id="selectById" resultType="com.yq.entity.Student" parameterType="int">  
+  select * from student where id = ${id}  
+</select>
+
+ ${字符} 表示字符串的连接，把sql语句和其他的内容使用 字符串 的方式连接在一起
+    
+mybatis创建statement对象，执行sql语句
+    Statement stmt = conn.createStatement(sql);
+	ResultSet rs = stmt.ecuteQuery();
+```
+
+
+
+特点：
+
++ 使用Statement对象，执行sql语句，效率低
++ 使用字符串连接，由sql注入的风险
++ 是原样使用的，不会区分数据
++ 常用作 **表名或列名**，**可以用来排序**	
+
+```sql
+使用列名排序
+select * form student order by ${ColName}
+
+既可以查询又可以排序
+select * from student where name=#{name} order by ${ColName}
+
+查询表名
+select * from ${TableName} where name=#{name} order by ${ColName}
+```
+
++ 需要使用**@Parm**命名参数
+
+完整代码：
+
+```sql
+<select id="selectByTableNameAndColName" resultType="com.yq.entity.Student">
+        select * from ${tableName} where name=#{name} order by ${colName} desc
+ </select>
+```
+
+```java
+List<Student> selectByTableNameAndColName(@Param("tableName")String tableName,
+                                          @Param("colName")String colName,
+                                          @Param("name")String name);
+```
+
+
+
+### 3.4 封装MyBatis输出结果
+
+mybatis执行sql语句，得到ResultSet，转为jav对象
+
+#### 3.4.1 resultType
+
++ 两种值：1. java全限定名称    2. 或者别名
+
+```sql
+<select id="selectByTableNameAndColName" resultType="com.yq.entity.Student">
+
+使用全限定名称，意思是mybatis执行sql，把ResultSet中的数据转为Student类型的对象，mybatis会执行以下操作
+
+1. 调用student的无参构造方法，创建对象
+	Student student = new Student() //使用反射创建对象
+2. 同名的列赋值给同名的属性
+	student.setId(rs.getInt("id"));
+	student.setName(rs.getString("name"));
+3. 得到java对象，如果dao接口返回的是List集合，mybatis把student放入到L	ist集合
+
+值得注意一点：mybatis在默认情况下调用无参构造和setter，当无参构造不存在的时候（即创建了有参构造），mybatis会调用有参构造，当setter不存在的时候，也会用一种方法为对象赋值
+```
+
++ 返回简单类型
+
+dao.class
+
+```java
+Integer selectNum();
+```
+
+mapper
+
+```xml
+<select id="selectNum" resultType="java.lang.Integer">
+        select count(*) from student
+</select>
+```
+
++ 返回map
+
+返回的map ，key是列名，value是值，sql语句只能获取一行记录，多余一行报错
+
+```xml
+<select id="selectReturnMap" resultType="java.util.HashMap">
+        select * from student where id = #{id}
+</select>
+```
+
+
+
+
+
+#### 3.4.2 resultMap
+
+
+
+### 3.5 自定义别名
+
+1. 第一种:
+
+​		优点：别名可以自定义，缺点：每个类型必须单独定义
+
+```xml
+<typeAliases>
+<!--        第一种格式：
+                    type: java类型全限定名称
+                    alias：自定义别名-->
+        <typeAlias type="com.yq.entity.Student" alias="student"/> </typeAliases>
+```
+
+2. 第二种方式
+
+   name中写包名，mybatis会把包中所有的类名作为别名
+
+   缺点：重名不同包
+
+```xml
+<!--        第二种格式：
+                    name中写包名，mybatis会把包中所有的类名作为别名-->
+<package name="com.yq.entity"/>
+```
+
+目前推荐的是**不使用别名**。
