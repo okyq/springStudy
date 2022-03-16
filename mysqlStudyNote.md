@@ -133,7 +133,6 @@ commit rollback savepoint grant revoke
 		|   all| 需要和单行比较操作符一起使用，和子查询返回的所有值比较 |
 		|   some| 实际上是any的别名，一般使用any|
 
-	
 2. 内查询是否被执行多次
 	+ 相关子查询（内查询执行多次，有先相关性）
 		+ 查询员工中工资大于本部门平均工资的员工的last_name,salary和其department_id
@@ -148,7 +147,7 @@ commit rollback savepoint grant revoke
 		WHERE department_id =
 		e1.`department_id`
 		);
-		```
+		 ```
 		+ 方式2：在from中声明子查询
 			```
 			SELECT e.last_name,e.salary,e.department_id

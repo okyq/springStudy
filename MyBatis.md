@@ -403,6 +403,44 @@ mapper
 
 #### 3.4.2 resultMap
 
+resultMap:结果映射。
+
+**第一种用法**：自定义列名和java对象属性的对应关系
+
+1. 先定义resultMap标签，指定列名和属性名的关系
+2. 在select标签使用result属性，指定上面定义的resultMap的id值
+
+vo层
+
+```java
+public class StudentVo {
+    private int stu_id;
+    private String stu_name;
+}
+```
+
+mapper
+
+```xml
+<!--    使用ResultMap,当vo层字段和表字段不一样-->
+    <select id="selectByResultMap" resultMap="stuResultMap">
+        select id,name from student where id = #{id}
+    </select>
+<!--    定义resultMap-->
+    <resultMap id="stuResultMap" type="com.yq.vo.StudentVo">
+        <id property="stu_id" column="id"/>
+        <result property="stu_name" column="name"/>
+    </resultMap>
+```
+
+dao
+
+```java
+StudentVo selectByResultMap(@Param("id")int id);
+```
+
+**第二种用法：** 一对一关联查询
+
 
 
 ### 3.5 自定义别名
