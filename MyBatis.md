@@ -1,4 +1,4 @@
-# <center>MyBatis框架
+# MyBatis框架
 ## 1. 框架概述
 ### 1.1 三层架构
 mvc：web开发中使用mvc架构模式
@@ -88,7 +88,7 @@ StudentDao.xml
  + resultType：执行sql语句后，把数据赋值给哪个类型的对象  
  使用java对象的全限定的名称  
 +  #{id}:占位符  
-  
+
 
 + namespace: 命名空间，必须有值，推荐使用Dao接口的全限定名称  
 作用：参与识别sql语句  
@@ -154,7 +154,7 @@ try(SqlSession session = factory.openSession()){
 	+ **openSession()** ： 获取一个默认的SqlSession对象，默认需要手工提交事务
 	+ **openSession(boolean)**：boolean参数表示是否自动提交事务
 5. **SqlSession对象**
-SqlSession的作用是提供了大量的执行sql的方法
+	SqlSession的作用是提供了大量的执行sql的方法
 	1. selectOne：执行sql语句最多得到一行记录
 	2. selectList：执行sql语句，返回多行记录
 	3. selectMap：执行sql语句，得到一个Map集合
@@ -163,3 +163,53 @@ SqlSession的作用是提供了大量的执行sql的方法
 	6. delete：执行delete语句
 	7. commit：提交事务
 	8. rollback：回滚事务
+## 3 MyBatis框架dao代理
+### 3.1 动态代理
+mybatis根据dao接口，创建一个内存中的接口实现类对象，由**mybatis**创建StudentDao接口的实现类Proxy（StudentDaoImpl），使用框架创建的StudentDaoImpl代替手工创建的StudentDaoImpl。不用开发人员创建Dao接口的实现类
+```
+StudentDao mapper = session.getMapper(StudentDao.class);
+```
+**使用动态代理的要求**
+
+1. mapper中的namespace必须是dao接口的全限定名称
+2. mapper中的sql语句的id必须是dao中的方法名
+### 3.2 深入理解参数
+通过java程序把数据传入mapper文件，主要是指dao方法的形参
+#### 3.2.1 parameterType
+parameterType：表示参数类型，指定dao方法的形参数据类型。这个形参的数据类型是给mybatis在给sql语句的参数赋值的时候使用。PreparedStatement.setXXX（位置，值）
+**可以不写**，但是为了代码的易读性还是写上
+可以使用**别名**，否则使用**全类名**
+```
+<select id="selectById" resultType="com.yq.entity.Student" parameterType="int">  
+	  select * from student where id = #{id}  
+</select>
+```
+#### 3.2.2一个简单类型的参数
+Dao接口中的方法的参数只有一个简单类型（java基本类型和String），占位符 **#{任意字符 }**，和方法名称无关
+```
+<select id="selectById" resultType="com.yq.entity.Student" parameterType="int">  
+  select * from student where id = #{id}  
+</select>
+```
+**和**
+```
+<select id="selectById" resultType="com.yq.entity.Student" parameterType="int">  
+  select * from student where id = #{abc}  
+</select>
+```
+**是一样的**
+
+
+#### 3.2.3dao接口方法由多个简单类型的参数
+@Param：命名参数，在方法的形参前面使用，在mapper中使用自定义的value值代替`#{}`中的值
+```
+List<Student> selectStudentByNameOrAge(@Param("myname")String name,@Param("myage")int age);
+```
+```
+<select id="selectStudentByNameOrAge" resultType="com.yq.entity.Student">  
+  select * from student where name=#{myname} or age=#{myage}  
+</select>
+```
+
+### 3.3 封装MyBatis输出结果
+### 3.4 模糊like
