@@ -1,4 +1,4 @@
-# MyBatis框架
+# 	MyBatis框架
 ## 一. 框架概述
 ### 1.1 三层架构
 mvc：web开发中使用mvc架构模式
@@ -434,7 +434,7 @@ mapper
 
 resultMap:结果映射。
 
-**第一种用法**：自定义列名和java对象属性的对应关系
+**第一种用法**：自定义列名和java对象属性的对应关系,也可以在查询表的时候设置别名
 
 1. 先定义resultMap标签，指定列名和属性名的关系
 2. 在select标签使用result属性，指定上面定义的resultMap的id值
@@ -555,7 +555,70 @@ mapper
 注意： 使用 association 和  javaType！！！
 ```
 
+同时**可以使用级联查询和分布查询**
 
+**分布查询**：
+
+一个订单对应一个学生，先查出订单，再根据订单查询学生
+
+思考方式：
+
++ 订单中包含了学生信息，所以在查询订单的时候需要返回学生信息，使用resultMap
+
+```xml
+<select id="selectByStepOne" resultMap="selectByStep">
+        select * from ordertable where order_id=#{id}    
+</select>
+```
+
++ 从订单中查询出来的stu_id，根据这个id查询学生信息
+
+```xml
+<select id="selectById" resultType="student" parameterType="int">
+        select * from student where id = #{id}
+</select>
+```
+
++ 在resultMap中将stu_id 给 selectById
+
+```xml
+<resultMap id="selectByStep" type="com.yq.entity.Order_Student">
+        <id property="order_id" column="order_id"/>
+        <result property="order_name" column="order_name"/>
+        <result property="stu_id" column="stu_id"/>
+        <association property="student" column="stu_id" select="com.yq.dao.StudentDao.selectById"/>
+</resultMap>
+<!-- association定义关联对象的封装规则
+	 		select:表明当前属性是调用select指定的方法查出的结果
+	 		column:指定将哪一列的值传给这个方法
+	 		流程：使用select指定的方法（传入column指定的这列参数的值）查出对象，并封装给property指定的属性
+	 	 -->
+```
+
+>分布查询的优点：可以实现延迟加载，但是必须在核心配置文件中设置全局配置信息
+>
+>lazyLoadingEnabled：延迟加载的全局开关。当开启时，所有关联对象都会延迟加载（即为分布查询的第二步）
+>
+>aggressiveLazyLoading：当开启时，任何方法的调用都会加载该对象的所有属性。 否则，每个属性会按需加载  ，为了延迟加载应该关闭该对象，默认关闭
+>
+>此时就可以实现按需加载，获取的数据是什么，就只会执行相应的sql。此时可通过association和collection中的**fetchType**属性设置当前的分步查询是否使用延迟加载，fetchType="lazy(延迟加载)|eager(立即加载)"
+>
+>```java
+>@Test
+>    public void selectByStepOne(){
+>        try(SqlSession session = MyBatisUtils.getSqlSession()) {
+>            OrderDao mapper = session.getMapper(OrderDao.class);
+>            Order_Student os = mapper.selectByStepOne(1);
+>            System.out.println(os.getOrder_name());
+>        }
+>    }
+>```
+>
+>当最后只需要Order_name时，就不会执行分布查询的第二步
+
+
+
+****
 
 ****
 
@@ -609,6 +672,49 @@ mapper
 ```
 
 
+
+同样也可以使用分布查询
+
+**分布查询**
+
+思考：一个学生有多个订单，先查询学生，再根据学生的id查询订单，根据学生的id查询订单的时候，可以有多个订单
+
+通过学生id查询学生信息
+
+```java
+ Student_Order selectByStep(@Param("id") int id);
+```
+
+```java
+<select id="selectByStep" resultMap="selectStep">
+        select * from student where id = #{id}
+</select>
+```
+
+通过学生id查询订单信息
+
+```java
+List<Order> selectByStuId(@Param("stu_id") int id);
+```
+
+```xml
+<select id="selectByStuId" resultType="com.yq.entity.Order">
+        select * from ordertable where stu_id = #{stu_id}
+</select>
+```
+
+resultMap
+
+```xml
+<resultMap id="selectStep" type="com.yq.entity.Student_Order">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="email" column="email"/>
+        <result property="age" column="age"/>
+        <collection property="orders" select="com.yq.dao.OrderDao.selectByStuId"
+                    column="id"/>
+</resultMap>
+```
 
 
 
@@ -679,3 +785,21 @@ mapper
 </delete>
 ```
 
+### 4.3 添加功能获取自增的主键
+
+```java
+//    添加功能获取自增的主键
+    int insertStudentGetId(Student student);
+```
+
+```xml
+<insert id="insertStudentGetId" useGeneratedKeys="true" keyProperty="id">
+        insert into student values(null,#{name},#{email},#{age})
+</insert>
+```
+
+在insert标签中声明useGeneratedKeys和keyProperty
+
+## 五 动态sql
+
+Mybatis框架的动态SQL技术是一种根据特定条件动态拼装SQL语句的功能，它存在的意义是为了解决拼接SQL语句字符串时的痛点问题
