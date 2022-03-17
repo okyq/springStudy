@@ -1,4 +1,7 @@
+
+
 # 	MyBatis框架
+
 ## 一. 框架概述
 ### 1.1 三层架构
 mvc：web开发中使用mvc架构模式
@@ -803,3 +806,436 @@ resultMap
 ## 五 动态sql
 
 Mybatis框架的动态SQL技术是一种根据特定条件动态拼装SQL语句的功能，它存在的意义是为了解决拼接SQL语句字符串时的痛点问题
+
+### 5.1 if
+
+- if标签可通过test属性（即传递过来的数据）的表达式进行判断，若表达式的结果为true，则标签中的内容会执行；反之标签中的内容不会执行
+- 在where后面添加一个恒成立条件`1=1`，防止sql语句变为：`select * from t_emp where and age = ? and sex = ? and email = ?`，此时`where`会与`and`连用，SQL语句会报错
+
+```xml
+<select id="selectSynamic" resultType="com.yq.entity.Student">
+        select * from student where 1=1
+        <if test="name != null and name !=''">
+           and  name = #{name}
+        </if>
+</select>
+```
+
+### 5.2 where
+
+- where和if一般结合使用：
+ - 若where标签中的if条件都不满足，则where标签没有任何功能，即不会添加where关键字  
+
++ 若where标签中的if条件满足，则where标签会自动添加where关键字，并将条件最前方多余的and/or去掉  
++ 注意：where标签不能去掉**条件后**多余的and/or
+
+```xml
+<select id="selectSynamic" resultType="com.yq.entity.Student">
+        select * from student
+        <where>
+            <if test="name != null and name !=''">
+                and  name = #{name}
+            </if>
+        </where>
+</select>
+```
+
+### 5.3 trim
+
+trim用于去掉或添加标签中的内容  
+
+**常用属性**
+
+ - prefix：在trim标签中的内容的前面添加某些内容  
+ - suffix：在trim标签中的内容的后面添加某些内容 
+ - prefixOverrides：在trim标签中的内容的前面去掉某些内容  
+ - suffixOverrides：在trim标签中的内容的后面去掉某些内容
+- 若trim中的标签都不满足条件，则trim标签没有任何效果，也就是只剩下`select * from t_emp`
+
+```xml
+<!--List<Emp> getEmpByCondition(Emp emp);-->
+<select id="getEmpByCondition" resultType="Emp">
+	select * from t_emp
+	<trim prefix="where" suffixOverrides="and|or">
+		<if test="empName != null and empName !=''">
+			emp_name = #{empName} and
+		</if>
+		<if test="age != null and age !=''">
+			age = #{age} and
+		</if>
+		<if test="sex != null and sex !=''">
+			sex = #{sex} or
+		</if>
+		<if test="email != null and email !=''">
+			email = #{email}
+		</if>
+	</trim>
+</select>
+```
+
+### 5.4 choose,when,otherwise
+
+相当于 if。。elseif。。else
+
++ choose相当于只是一个父标签,when相当于if，otherwise相当于else
++ when只要有一个满足，其余都不会执行
++ 如果都不满足，就执行otherwise
+
+```xml
+<select id="getEmpByChoose" resultType="Emp">
+	select * from t_emp
+	<where>
+		<choose>
+			<when test="empName != null and empName != ''">
+				emp_name = #{empName}
+			</when>
+			<when test="age != null and age != ''">
+				age = #{age}
+			</when>
+			<when test="sex != null and sex != ''">
+				sex = #{sex}
+			</when>
+			<when test="email != null and email != ''">
+				email = #{email}
+			</when>
+			<otherwise>
+				did = 1
+			</otherwise>
+		</choose>
+	</where>
+</select>
+```
+
+
+
+### 5.5 foreach
+
++ 通过foreach实现批量删除
+
+```java
+int deleteByArray(@Param("ids") int[] ids);
+```
+
+```xml
+<delete id="deleteByArray">
+        delete from student where id in 
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+</delete>
+```
+
++ 通过foreach实现批量添加
+
+两种方法都可以
+
+第一种
+
+```java
+int insertByArray(@Param("students") List<Student> students);
+```
+
+```xml
+<insert id="insertByArray" keyProperty="id" useGeneratedKeys="true">
+        insert into student values
+        <foreach collection="students" item="student" separator=",">
+            (null,#{student.name},#{student.email},#{student.age})
+        </foreach>
+</insert>
+```
+
+第二种
+
+```java
+int insertByArrayTest(@Param("students") Student[] students);
+```
+
+```xml
+<insert id="insertByArrayTest" keyProperty="id" useGeneratedKeys="true">
+        insert into student values
+        <foreach collection="students" item="student"  separator=",">
+            (null,#{student.name},#{student.email},#{student.age})
+        </foreach>
+</insert>
+```
+
+
+
+### 5.6 sql片段
+
+- sql片段，可以记录一段公共sql片段，在使用的地方通过include标签进行引入
+- 声明sql片段：`<sql>`标签
+
+```xml
+<sql id="empColumns">eid,emp_name,age,sex,email</sql>
+```
+
++ 引用sql片段：`<include>`标签
+
+```xml
+<!--List<Emp> getEmpByCondition(Emp emp);-->
+<select id="getEmpByCondition" resultType="Emp">
+	select <include refid="empColumns"></include> from t_emp
+</select>
+```
+
+## 六 mysql缓存
+
+### 6.1 MyBatis一级缓存，默认开启
+
++ 一级缓存是SqlSession级别的，通过同一个SqlSession查询的数据会被缓存，下次查询相同的数据，就会从缓存中直接获取，不会从数据库重新访问  
++ 使一级缓存失效的四种情况：
+
+```
+1. 不同的SqlSession对应不同的一级缓存  
+2. 同一个SqlSession但是查询条件不同
+3. 同一个SqlSession两次查询期间执行了任何一次增删改操作
+4. 同一个SqlSession两次查询期间手动清空了缓存 sqlsession.clearCach()
+```
+
+
+
+### 6.2 MyBatis二级缓存
+
+- 二级缓存是SqlSessionFactory级别，通过同一个SqlSessionFactory创建的SqlSession查询的结果会被缓存；此后若再次执行相同的查询语句，结果就会从缓存中获取  
+- 二级缓存开启的条件:
+
+```
+1. 在核心配置文件中，设置全局配置属性cacheEnabled="true"，默认为true，不需要设置
+2. 在映射文件中设置标签 <cache/>
+3. 二级缓存必须在SqlSession关闭或提交之后有效
+4. 查询的数据所转换的实体类类型必须实现序列化的接口
+```
+
++ 使二级缓存失效的情况：两次查询之间执行了任意的增删改，会使一级和二级缓存同时失效
+
+### 6.3 二级缓存相关配置
+
+在mapper配置文件中添加的cache标签可以设置一些属性
+
+- eviction属性：缓存回收策略  
+
+  - LRU（Least Recently Used） – 最近最少使用的：移除最长时间不被使用的对象。  
+  - FIFO（First in First out） – 先进先出：按对象进入缓存的顺序来移除它们。  
+  - SOFT – 软引用：移除基于垃圾回收器状态和软引用规则的对象。  
+  - WEAK – 弱引用：更积极地移除基于垃圾收集器状态和弱引用规则的对象。
+  - 默认的是 LRU
+
+- flushInterval属性：刷新间隔，单位毫秒
+
+  默认情况是不设置，也就是没有刷新间隔，缓存仅仅调用语句（增删改）时刷新
+
+- size属性：引用数目，正整数
+
+  代表缓存最多可以存储多少个对象，太大容易导致内存溢出
+
+- readOnly属性：只读，true/false
+
+  - true：只读缓存；会给所有调用者返回缓存对象的相同实例。因此这些对象不能被修改。这提供了很重要的性能优势。  
+  - false：读写缓存；会返回缓存对象的拷贝（通过序列化）。这会慢一些，但是安全，因此默认是false
+
+### 6.3 缓存查询顺序
+
+- 先查询二级缓存，因为二级缓存中可能会有其他程序已经查出来的数据，可以拿来直接使用  
+- 如果二级缓存没有命中，再查询一级缓存  
+- 如果一级缓存也没有命中，则查询数据库  
+- SqlSession关闭之后，一级缓存中的数据会写入二级缓存
+
+## 七 逆向工程
+
+逆向工程的maven配置 pom.xml
+
+```xml
+<dependencies>
+	<!-- MyBatis核心依赖包 -->
+	<dependency>
+		<groupId>org.mybatis</groupId>
+		<artifactId>mybatis</artifactId>
+		<version>3.5.9</version>
+	</dependency>
+	<!-- junit测试 -->
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>4.13.2</version>
+		<scope>test</scope>
+	</dependency>
+	<!-- MySQL驱动 -->
+	<dependency>
+		<groupId>mysql</groupId>
+		<artifactId>mysql-connector-java</artifactId>
+		<version>8.0.27</version>
+	</dependency>
+	<!-- log4j日志 -->
+	<dependency>
+		<groupId>log4j</groupId>
+		<artifactId>log4j</artifactId>
+		<version>1.2.17</version>
+	</dependency>
+</dependencies>
+<!-- 控制Maven在构建过程中相关配置 -->
+<build>
+	<!-- 构建过程中用到的插件 -->
+	<plugins>
+		<!-- 具体插件，逆向工程的操作是以构建过程中插件形式出现的 -->
+		<plugin>
+			<groupId>org.mybatis.generator</groupId>
+			<artifactId>mybatis-generator-maven-plugin</artifactId>
+			<version>1.3.0</version>
+			<!-- 插件的依赖 -->
+			<dependencies>
+				<!-- 逆向工程的核心依赖 -->
+				<dependency>
+					<groupId>org.mybatis.generator</groupId>
+					<artifactId>mybatis-generator-core</artifactId>
+					<version>1.3.2</version>
+				</dependency>
+				<!-- 数据库连接池 -->
+				<dependency>
+					<groupId>com.mchange</groupId>
+					<artifactId>c3p0</artifactId>
+					<version>0.9.2</version>
+				</dependency>
+				<!-- MySQL驱动 -->
+				<dependency>
+					<groupId>mysql</groupId>
+					<artifactId>mysql-connector-java</artifactId>
+					<version>8.0.27</version>
+				</dependency>
+			</dependencies>
+		</plugin>
+	</plugins>
+</build>
+```
+
+MyBatis核心配置文件 mybatis.xml
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <properties resource="jdbc.properties"/>
+    <typeAliases>
+        <package name=""/>
+    </typeAliases>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <package name=""/>
+    </mappers>
+</configuration>
+```
+
+创建逆向工程的配置文件 generatorConfig.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <!--
+    targetRuntime: 执行生成的逆向工程的版本
+    MyBatis3Simple: 生成基本的CRUD（清新简洁版）
+    MyBatis3: 生成带条件的CRUD（奢华尊享版）
+    -->
+    <context id="DB2Tables" targetRuntime="MyBatis3Simple">
+        <!-- 数据库的连接信息 -->
+        <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/mybatis"
+                        userId="root"
+                        password="123456">
+        </jdbcConnection>
+        <!-- javaBean的生成策略-->
+        <javaModelGenerator targetPackage="com.atguigu.mybatis.pojo" targetProject=".\src\main\java">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+        <!-- SQL映射文件的生成策略 -->
+        <sqlMapGenerator targetPackage="com.atguigu.mybatis.mapper"
+                         targetProject=".\src\main\resources">
+            <property name="enableSubPackages" value="true" />
+        </sqlMapGenerator>
+        <!-- Mapper接口的生成策略 -->
+        <javaClientGenerator type="XMLMAPPER"
+                             targetPackage="com.atguigu.mybatis.mapper" targetProject=".\src\main\java">
+            <property name="enableSubPackages" value="true" />
+        </javaClientGenerator>
+        <!-- 逆向分析的表 -->
+        <!-- tableName设置为*号，可以对应所有表，此时不写domainObjectName -->
+        <!-- domainObjectName属性指定生成出来的实体类的类名 -->
+        <table tableName="t_emp" domainObjectName="Emp"/>
+        <table tableName="t_dept" domainObjectName="Dept"/>
+    </context>
+</generatorConfiguration>
+```
+
+举个例子：
+
+```java
+@Test
+public void mytest(){
+        try(SqlSession session = MyBatisUtils.getSqlSession()) {
+            StudentMapper mapper = session.getMapper(StudentMapper.class);
+            StudentExample example = new StudentExample();
+            example.createCriteria().andAgeBetween(5,7).andNameEqualTo("yuqian");
+            example.or().andNameEqualTo("aa");
+            List<Student> studentList  = mapper.selectByExample(example);
+            System.out.println(studentList);
+        }
+}
+```
+
+
+
+## 八 分页操作
+
+pom.xml中添加依赖
+
+```xml
+<dependency>
+	<groupId>com.github.pagehelper</groupId>
+	<artifactId>pagehelper</artifactId>
+	<version>5.2.0</version>
+</dependency>
+```
+
+在mybatis.xml中配置插件
+
+```xml
+<plugins>
+	<!--设置分页插件-->
+	<plugin interceptor="com.github.pagehelper.PageInterceptor">	     </plugin>
+</plugins>
+```
+
+开启分页功能
+
+- 在查询功能之前使用`PageHelper.startPage(int pageNum, int pageSize)`开启分页功能
+ - pageNum：当前页的页码  
+ - pageSize：每页显示的条数
+
+```java
+public void mytest(){
+        try(SqlSession session = MyBatisUtils.getSqlSession()) {
+            StudentMapper mapper = session.getMapper(StudentMapper.class);
+            StudentExample example = new StudentExample();
+            example.createCriteria().andAgeBetween(5,7).andNameEqualTo("yuqian");
+            example.or().andNameEqualTo("aa");
+            PageHelper.startPage(1,1);
+            List<Student> studentList  = mapper.selectByExample(example);
+            System.out.println(studentList);
+        }
+}
+```
+
