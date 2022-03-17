@@ -1,5 +1,5 @@
 # MyBatis框架
-## 1. 框架概述
+## 一. 框架概述
 ### 1.1 三层架构
 mvc：web开发中使用mvc架构模式
 
@@ -27,7 +27,7 @@ mvc的作用：
 
 ### 1.2 三层架构请求处理的流程
 用户发起请求--->界面层--->业务逻辑层--->持久层--->数据库
-## 2 MyBatis
+## 二 MyBatis
 ### 2.1 第一个例子
 1. 创建student表  id(pk),name,email,age
 2. 新建maven项目
@@ -163,7 +163,7 @@ try(SqlSession session = factory.openSession()){
 	6. delete：执行delete语句
 	7. commit：提交事务
 	8. rollback：回滚事务
-## 3 MyBatis框架dao代理
+## 三 MyBatis框架dao代理
 ### 3.1 动态代理
 mybatis根据dao接口，创建一个内存中的接口实现类对象，由**mybatis**创建StudentDao接口的实现类Proxy（StudentDaoImpl），使用框架创建的StudentDaoImpl代替手工创建的StudentDaoImpl。不用开发人员创建Dao接口的实现类
 ```
@@ -248,7 +248,33 @@ List<Student> students =mapper.selectByPosition("yuqian",5);
 
 #### 3.2.6 dao接口是个map
 
-mapper中写key....... name=#{key}
+mapper中resultType是map，查询出来的结果是map（字段名，字段对应的值），只能有一条记录
+
+```java
+Map<Object, Object> getUserToMap(@Param("id") int id);
+```
+
+```xml
+<select id="getUserToMap" resultType="map">
+	select * from t_user where id = #{id}
+</select>
+```
+
+
+
+#### 3.2.7 查询多条数据是map集合
+
+```java
+List<Map<String, Object>> getAllUserToMap();
+```
+
+```xml
+<select id="getAllUserToMap" resultType="map">  
+	select * from t_user  
+</select>
+```
+
+
 
 
 
@@ -288,7 +314,7 @@ ResultSet rs = pst.executeQuery(); 执行sql语句
 + PrepareStatement能够避免sql注入
 + #{} 常常作为列值使用，位于等号右侧，#{}位置的值和数据类型有关
 
-
++ id为字符型，那么#{id}表示的就是'12'，如果id为整型，那么id就是12
 
 
 
@@ -313,6 +339,9 @@ mybatis创建statement对象，执行sql语句
 
 
 特点：
+
++ select * from tablename where id = ${id}
+  如果字段id为整型，sql语句就不会出错，但是如果字段id为字符型， 那么sql语句应该写成select * from table where id = '${id}'。
 
 + 使用Statement对象，执行sql语句，效率低
 + 使用字符串连接，由sql注入的风险
@@ -433,13 +462,157 @@ mapper
     </resultMap>
 ```
 
+| 属性 | 描述 |
+| :----------: | :--------------------------------------------------: |
+|property	|需要映射到JavaBean 的属性名称。|
+|column|	数据表的列名或者标签别名。|
+|javaType|	一个完整的类名，或者是一个类型别名。如果你匹配的是一个JavaBean，那MyBatis 通常会自行检测到。然后，如果你是要映射到一个HashMap，那你需要指定javaType 要达到的目的。|
+|jdbcType|	数据表支持的类型列表。这个属性只在insert,update 或delete 的时候针对允许空的列有用。JDBC 需要这项，但MyBatis 不需要。如果你是直接针对JDBC 编码，且有允许空的列，而你要指定这项。|
+|typeHandler	|使用这个属性可以覆写类型处理器。这项值可以是一个完整的类名，也可以是一个类型别名。|
+
+
 dao
 
 ```java
 StudentVo selectByResultMap(@Param("id")int id);
 ```
 
+
+
+
+
+**********
+
+**********
+
+
+
+
+
 **第二种用法：** 一对一关联查询
+
+一个学生（student）对应多个订单，一个订单（order）对应一个学生
+
+所以应该这样建表
+
+在order表中加入 stu_id 并设置外键，表示一个订单对应一个学生
+
+`student表的属性：id(pk),  name,  email,  age`
+
+`ordertabel表的属性：order_id(pk),  stu_id(fk),  order_name`
+
+
+
+Order_Student.class
+
+因为一个订单对应一个学生，所以在order表中加入student
+
+```java
+public class Order_Student {
+    private int order_id;
+    private int stu_id;
+    private String order_name;
+    private Student student;
+ }
+```
+
+Student.class
+
+```java
+public class Student {
+    private int id;
+    private String name;
+    private String email;
+    private int age;
+}
+```
+
+dao
+
+```java
+Order_Student selctByOneToOne( @Param("id")int id );
+```
+
+mapper
+
+```xml
+<!--    使用resultMap一对一-->
+   <select id="selctByOneToOne" resultMap="oneToOne">
+       select o.*, s.* from ordertable as o left join student as s  on o.stu_id = s.id where order_id=#{id}
+   </select>
+    
+    <resultMap id="oneToOne" type="com.yq.entity.Order_Student">
+        <id property="order_id" column="order_id"/>
+        <result property="order_name" column="order_name"/>
+        <result property="stu_id" column="stu_id"/>
+        <association property="student" javaType="com.yq.entity.Student">
+            <id property="id" column="id"/>
+            <result property="name" column="name"/>
+            <result property="email" column="email"/>
+            <result property="age" column="age"/>
+        </association>
+    </resultMap>
+注意： 使用 association 和  javaType！！！
+```
+
+
+
+****
+
+****
+
+
+
+**第三种用法：** 一对多关联查询
+
+一个学生可以有多个订单
+
+Student_Order.class
+
+```java
+public class Student_Order {
+    private int id;
+    private String name;
+    private String email;
+    private int age;
+    private List<Order> orders;
+}
+```
+
+dao
+
+```java
+Student_Order selectByOneToMany(@Param("id")int id);
+```
+
+mapper
+
+```xml
+<!--    使用resultMap一对多查询-->
+    <select id="selectByOneToMany" resultMap="ontToMany">
+        select s.*, o.* from student as s left join ordertable as o  on o.stu_id = s.id where s.id = #{id}
+    </select>
+
+    <resultMap id="ontToMany" type="com.yq.entity.Student_Order">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="email" column="email"/>
+        <result property="age" column="age"/>
+        <collection property="orders" ofType="com.yq.entity.Order">
+            <id property="order_id" column="order_id"/>
+            <result property="stu_id" column="stu_id"/>
+            <result property="order_name" column="order_name"/>
+        </collection>
+    </resultMap>
+
+注意 ：使用collection  和   ofType！！
+```
+
+
+
+
+
+
 
 
 
@@ -470,3 +643,39 @@ StudentVo selectByResultMap(@Param("id")int id);
 ```
 
 目前推荐的是**不使用别名**。
+
+
+
+## 四 特殊sql执行
+
+
+
+### 4.1 模糊查询
+
+```java
+ List<Student> selectByLike(@Param("name")String name);
+```
+
+```xml
+<!--    模糊查询-->
+    <select id="selectByLike" resultType="com.yq.entity.Student">
+        select * from student where name like "%"#{name}"%"
+    </select>
+```
+
+**注意**:  "%"#{name}"%" 使用最常见
+
+ ### 4.2 批量删除
+
++ 只能使用\${}，如果使用#{}，则解析后的sql语句为`delete from t_user where id in ('1,2,3')`，这样是将`1,2,3`看做是一个整体，只有id为`1,2,3`的数据会被删除。正确的语句应该是`delete from t_user where id in (1,2,3)`，或者`delete from t_user where id in ('1','2','3')`
+
+```java
+ int deleteMany(@Param("ids")String ids);
+```
+
+```xml
+<delete id="deleteMany">
+        delete from student where id in (${ids})
+</delete>
+```
+
