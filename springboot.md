@@ -300,9 +300,278 @@ k:
  
  ```
 
+```java
+@Data
+public class Person {
+
+ private String userName;
+ private Boolean boss;
+ private Date birth;
+ private Integer age;
+ private Pet pet;
+ private String[] interests;
+ private List<String> animal;
+ private Map<String, Object> score;
+ private Set<Double> salarys;
+ private Map<String, List<Pet>> allPets;
+}
+@Data
+public class Pet {
+ private String name;
+ private Double weight;
+}
+
+```
+
+aplication.yaml
+
+```yaml
+person:
+ userName: zhangsan
+ boss: false
+ birth: 2019/12/12 20:12:33
+ age: 18
+ pet:
+ name: tomcat
+ weight: 23.4
+ interests: [篮球,游泳]
+ animal:
+ - jerry
+ - mario
+ score:
+ english:
+ first: 30
+ second: 40
+ third: 50
+ math: [131,140,148]
+ chinese: {first: 128,second: 136}
+ salarys: [3999,4999.98,5999.99]
+ allPets:
+ sick:
+ - {name: tom}
+ - {name: jerry,weight: 47}
+ health: [{name: mario,weight: 47}]
+```
+
+## 4.2 配置提示
+
+```XML
+<dependency>
+     <groupId>org.springframework.boot</groupId>
+     <artifactId>spring-boot-configuration-processor</artifactId>
+     <optional>true</optional>
+</dependency>
+
+<build>
+     <plugins>
+         <plugin>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-maven-plugin</artifactId>
+         <configuration>
+             <excludes>
+                 <exclude>
+                     <groupId>org.springframework.boot</groupId>
+                     <artifactId>spring-boot-configuration-processor</artifactId>
+                 </exclude>
+             </excludes>
+         </configuration>
+         </plugin>
+     </plugins>
+ </build>
+
+```
+
 
 
 # 五 web开发
+
+## 5.1 简单功能分析
+
+### 5.1.1静态资源访问
+
+#### 1 静态资源目录
+
+只要静态资源放在类路径下： called /static (or /public or /resources or /META-INF/resources 访问 ： 当前项目根路径/ + 静态资源名
+
+原理： 静态映射/**。 
+
+请求进来，先去找Controller看能不能处理。不能处理的所有请求又都交给静态资源处理器。静态资源也找不到则响应404页面
+
+#### 2 静态资源访问前缀
+
+默认无前缀
+
+```yaml
+spring:
+ mvc:
+ static-path-pattern: /res/**
+
+```
+
+自定义静态资源访问前缀
+
+localhost:8080/res/test.jpg
+
+如果设定了自定义static文件夹
+
+```yaml
+spring:
+	web:
+    	resources:
+      		static-locations: classpath:/ha/
+```
+
+则springboot会在/ha这个文件夹下找文件
+
+
+
+#### 3 webjar
+
+自动映射
+
+网址：webjars.org
+
+```xml
+<dependency>
+ <groupId>org.webjars</groupId>
+ <artifactId>jquery</artifactId>
+ <version>3.5.1</version>
+ </dependency>
+
+```
+
+访问静态资源的地址 : localhost:8080/webjars**/jquery/3.5.1/jquery.js**
+
+### 5.1.2 欢迎页支持
+
+静态资源路径下 index.html
+
+自动匹配
+
+### 5.1.3 自定义Favicon
+
+把facicon.ico放在静态资源目录下即可
+
+### 5.1.4 静态配置原理
+
++ SpringBoot启动默认加载 xxxAutoConfiguration类（自动配置类）
++ SpringMVC功能的自动配置类 WebMvcAutoConfiguration，生效
++ （插入一个知识：如果一个类只有有参构造，则所有参数的值都会从容器中找）
+
+这部分知识后面补充把，现在不想看了
+
+## 5.2 请求参数处理
+
+### 5.2.0请求映射
+
+#### 1. rest使用与原理
+
++ @xxxMapping；
++ Rest风格支持（使用HTTP请求方式动词来表示对资源的操作）
+  + 以前：/getUser 获取用户 /deleteUser 删除用户 /editUser 修改用户 /saveUser 保存用户
+  + 现在： /user GET-获取用户 DELETE-删除用户 PUT-修改用户 POST-保存用户
+  + 核心Filter；HiddenHttpMethodFilter
+    + 用法： 表单method=post，隐藏域 _method=put
+    + SpringBoot中手动开启
+
+
+
+```yaml
+spring:
+ 	mvc:
+		 hiddenmethod:
+ 			filter:
+ 				enabled: true #开启页面表单的Rest功能
+
+```
+
+Rest原理（表单提交要使用REST的时候）
+
++  表单提交会带上_method=PUT 
+
++ 请求过来被HiddenHttpMethodFilter拦截 
+
+  + 请求是否正常，并且是POST 
+
+  + 获取到_method的值。
+
+  +  兼容以下请求；PUT.DELETE.PATCH 
+
+  + 原生request（post），包装模式requesWrapper重写了getMethod方法，返回的是传入的值。
+
+  +  过滤器链放行的时候用wrapper。以后的方法调用getMethod是调用requesWrapper的。
+
+#### 2. 请求映射原理
+
+SpringMVC功能分析都从 org.springframework.web.servlet.DispatcherServlet-》**doDispatch（）**
+
+  ....后面再看
+
+
+
++ SpringBoot自动配置了默认 的 RequestMappingHandlerMapping 
++ 请求进来，挨个尝试所有的HandlerMapping看是否有请求信息。
+  +  如果有就找到这个请求对应的handler 
+  + 如果没有就是下一个 HandlerMapping
+
+### 5.2.1 普通参数与基本注解
+
++ @PathVariable、
+
+  + rest风格
+
+  + ```java
+    @RequestMapping(value = "/user/{id}",method = RequestMethod.GET)  
+    public String getUserByID( @PathVariable("id")Integer id ){  
+        System.out.println("根据id查询用户信息,传入的id为："+id);  
+        return "success";  
+    }  
+    ```
+
+    
+
++ @RequestHeader、
+
+  + 是将请求头信息和控制器方法的形参创建映射关系
+
++ @ModelAttribute、
+
++ @RequestParam、
+
+  + 当形参的参数名和请求参数的参数名不一致的时候，可以使用`@RequestParam` 
+
++ @MatrixVariable、
+
++ @CookieValue、
+
+  + 是将cookie数据和控制器方法的形参创建映射关系，
+
++ @RequestBody
+  + @RequestBody可以获取请求体，需要在控制器方法中设置一个形参，使用@RequestBody进行标识，当前请求的请求体就会为当前注解所标识的形参赋值
+
+还有一些springmvc中的api之类
+
+
+
+### 5.2.2 POJO封装过程
+
+### 5.2.3 参数处理原理
+
+## 5.3 响应数据与内容协商
+
+## 5.4 视图解析与模板引擎
+
+## 5.5 拦截器
+
+## 5.6 跨域
+
+## 5.7 异常处理
+
+## 5.8 原生组件注入
+
+## 5.9 嵌入式web容器
+
+## 5.10 定制化原理
 
 # 六 数据访问
 
