@@ -516,50 +516,374 @@ SpringMVC功能分析都从 org.springframework.web.servlet.DispatcherServlet-�
 
 ### 5.2.1 普通参数与基本注解
 
-+ @PathVariable、
+#### 1 注解
+
++ **@PathVariable**、
 
   + rest风格
 
-  + ```java
+   ```java
     @RequestMapping(value = "/user/{id}",method = RequestMethod.GET)  
     public String getUserByID( @PathVariable("id")Integer id ){  
         System.out.println("根据id查询用户信息,传入的id为："+id);  
         return "success";  
     }  
-    ```
+   ```
 
     
 
-+ @RequestHeader、
++ **@RequestHeader**、
 
   + 是将请求头信息和控制器方法的形参创建映射关系
 
-+ @ModelAttribute、
++ **@ModelAttribute**、
 
-+ @RequestParam、
 
++ **@RequestParam**、
+  
   + 当形参的参数名和请求参数的参数名不一致的时候，可以使用`@RequestParam` 
+  
++ **@MatrixVariable**、
 
-+ @MatrixVariable、
 
-+ @CookieValue、
+  + SpringBoot默认禁用了矩阵变量
 
+
+    + 不使用@EnableWebMvc注解，使用@**Configuration+WebMvcConfigurer**自定义规则
+    
+     ```JAVA
+      @Configuration
+      public class HelloConfig {
+      
+          @Bean
+          public WebMvcConfigurer webMvcConfigurer(){
+              return  new WebMvcConfigurer() {
+                  @Override
+                  public void configurePathMatch(PathMatchConfigurer configurer) {
+                      UrlPathHelper urlPathHelper = new UrlPathHelper();
+                      urlPathHelper.setRemoveSemicolonContent(false);
+                      configurer.setUrlPathHelper(urlPathHelper);
+                  }
+              };
+          }
+      }
+      ```
+    
+     ```java
+          @ResponseBody
+          @RequestMapping("/matrix/{path}")
+          public Map getMatrix(@MatrixVariable("name") String name,
+                               @MatrixVariable("name2") String name2){
+              Map<String,String > matrixMap = new HashMap<>();
+              matrixMap.put("name" , name);
+              matrixMap.put("name2",name2);
+              return matrixMap;
+          }
+      }
+      ```
+    
+    ```html
+      /matrix/user;name=yuqian;name2=afe
+      ```
+
+  + 对于路径的处理，都是使用了UrlPathHelper进行解析，
+
+  + removeSemicolonContent（移除分号类容）
+
+  + 矩阵变量绑定在路径变量中
+
+  +   ```html
+      <a href:"/cars/sell;low=34;brand=byd,audi,yd"/>
+      ```
+
+      ```java
+      @GetMapping("/cars/{path}")
+      public Map cars(@MatrixVariable("low") Integer low,
+                     	@MatrixVariable("brand") List<String> brand)
+      ```
+
+      + 不同变量要用引号分开，要与路径看作为一个整体，例如
+
+      ```html
+      <a href:"/cars/sell;low=34;brand=byd,audi,yd/aaa/bbb"/>
+      此时请求的路径为：/cars/sell/aaa/bbb
+      ```
+
++ **@CookieValue**、
   + 是将cookie数据和控制器方法的形参创建映射关系，
 
-+ @RequestBody
++ **@RequestBody**
   + @RequestBody可以获取请求体，需要在控制器方法中设置一个形参，使用@RequestBody进行标识，当前请求的请求体就会为当前注解所标识的形参赋值
 
 还有一些springmvc中的api之类
 
++ **@RequestAttribute**
 
+  + 获取请求域中的数据
+
+  ```java
+  public Map success(@RequestAttribute("msg") String msg)
+  ```
+
+
+#### 2 servletApi
+
++ WebRequest、ServletRequest、MultipartRequest、 HttpSession、javax.servlet.http.PushBuilder、Principal、InputStream、Reader、HttpMethod、 Locale、TimeZone、ZoneId
+
+#### 3 复杂参数
+
++ **Map、Model（map、model里面的数据会被放在request的请求域 request.setAttribute）**、Errors/BindingResult、**RedirectAttributes（ 重定向携带数 据**）、**ServletResponse（response）**、SessionStatus、UriComponentsBuilder、ServletUriComponentsBuilder
+
+#### 4 自定义对象参数
+
+springmvc里面的
 
 ### 5.2.2 POJO封装过程
 
 ### 5.2.3 参数处理原理
 
++ HandlerMapping中找到能处理请求的Handler（Controller.method()）
++  为当前Handler 找一个适配器 HandlerAdapter； **RequestMappingHandlerAdapter** 
++ 适配器执行目标方法并确定方法参数的每一个值
+
+
+
 ## 5.3 响应数据与内容协商
 
+### 5.3.1 响应json
+
+jackson.jar + @ResponseBody
+
+引入webstart依赖
+
+```xml
+<dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+```
+
+会自动引入json场景
+
+```xml
+<dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-json</artifactId>
+      <version>2.6.4</version>
+      <scope>compile</scope>
+</dependency>
+```
+
+给前端自动返回json数据
+
+
+
+### 5.3.2 返回xml
+
+```xml
+加入xml依赖
+<dependency>
+    <groupId>com.fasterxml.jackson.dataformat</groupId>
+    <artifactId>jackson-dataformat-xml</artifactId>
+</dependency>
+```
+
+```java
+@Component
+@ConfigurationProperties(prefix = "userxml") //这里竟然不能使用大写或者驼峰
+public class UserXml {
+    private String username;
+    private String password;
+    
+```
+
+```yaml
+UserXml:
+  username: yuqian
+  password: yqpswd
+```
+
+此外也可以自定义xml节点
+
+```java
+
+@JacksonXmlRootElement(localName = "response")
+public class UserXmlVO {
+ 
+    @JacksonXmlProperty(localName = "user_name")
+    private String name;
+ 
+    @JacksonXmlElementWrapper(useWrapping = false)
+    @JacksonXmlProperty(localName = "order_info")
+    private List<OrderInfoVO> orderList;
+ 
+    // get set 略
+    
+@JacksonXmlRootElement： 用在类上，用来自定义根节点名称；
+
+@JacksonXmlProperty： 用在属性上，用来自定义子节点名称；
+
+@JacksonXmlElementWrapper： 用在属性上，可以用来嵌套包装一层父节点，或者禁用此属性参与 XML 转换。
+
+```
+
+
+
 ## 5.4 视图解析与模板引擎
+
+### 5.4.1 视图解析
+
+### 5.4.2 模板引擎-Thymeleaf
+
+#### 1. 简介 
+
+现代化、服务端Java模板引擎
+
+#### 2. 基本语法
+
+| 表达式名字 |  语法   |                用途                |
+| :--------: | :-----: | :--------------------------------: |
+|  变量取值  | ${...}  |  获取请求域、session域、对象等值   |
+|  选择变量  | *{...}  |          获取上下文对象值          |
+|    消息    | \#{...} |           获取国际化等值           |
+|    链接    | @{...}  |              生成链接              |
+| 片段表达式 | ~{...}  | jsp:include 作用，引入公共页面片段 |
+
+**字面量**：
+
++ 文本值: 'one text' , 'Another one!' ,…数字: 0 , 34 , 3.0 , 12.3 ,…布尔值: true , false
+
++ 空值: null
+
++ 变量： one，two，.... 变量不能有空格
+
+**文本操作**
+
++ 字符串拼接: +
++ 变量替换: |The name is ${name}|
+
+**数学运算**
+
++ 运算符: + , - , * , / , %
+
+**布尔运算**
+
++ 运算符: and , or 
++ 一元运算: ! , not
+
+**比较运算**
+
+比较: > , < , >= , <= ( gt , lt , ge , le )等式: == , != ( eq , ne )
+
+**条件运算**
+
++ If-then: (if) ? (then)
++  If-then-else: (if) ? (then) : (else) 
++ Default: (value) ?: (defaultvalue)
+
+**特殊操作**
+
+无操作： _
+
+**设置属性值-th:attr**
+
++ 设置单个值
+
+```html
+<form action="subscribe.html" th:attr="action=@{/subscribe}">
+	<fieldset>
+ 		<input type="text" name="email" />
+ 		<input type="submit" value="Subscribe!" th:attr="value=#{subscribe.submit}"/>
+ 	</fieldset>
+</form>
+```
+
++ 设置多个值
+
+```html
+<img src="../../images/gtvglogo.png" th:attr="src=@{/images/gtvglogo.png},title=#{logo},alt=#{logo}" />
+```
+
++ 以上两个替代写法
+
+```html
+<input type="submit" value="Subscribe!" th:value="#{subscribe.submit}"/>
+<form action="subscribe.html" th:action="@{/subscribe}">
+```
+
+**迭代**
+
+```html
+<tr th:each="prod : ${prods}">
+ 	<td th:text="${prod.name}">Onions</td>
+	<td th:text="${prod.price}">2.41</td>
+ 	<td th:text="${prod.inStock}? #{true} : #{false}">yes</td>
+</tr>
+```
+
+```html
+<tr th:each="prod,iterStat : ${prods}" th:class="${iterStat.odd}? 'odd'">
+	 <td th:text="${prod.name}">Onions</td>
+	 <td th:text="${prod.price}">2.41</td>
+ 	 <td th:text="${prod.inStock}? #{true} : #{false}">yes</td>
+</tr>
+
+```
+
+**条件运算**
+
+```html
+<a href="comments.html"
+	th:href="@{/product/comments(prodId=${prod.id})}"
+	th:if="${not #lists.isEmpty(prod.comments)}">view</a>
+<div th:switch="${user.role}">
+ 	<p th:case="'admin'">User is an administrator</p>
+ 	<p th:case="#{roles.manager}">User is a manager</p>
+ 	<p th:case="*">User is some other thing</p>
+</div>
+
+```
+
+#### 3. thymeleaf使用
+
+1. **引入stater**
+
+```xml
+<dependency>
+ 	<groupId>org.springframework.boot</groupId>
+ 	<artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+```
+
+2. **自动配置好thymeleaf**
+
+```java
+ThymeleafAutoConfiguration.class
+@Configuration(
+    proxyBeanMethods = false
+)
+@EnableConfigurationProperties({ThymeleafProperties.class})
+@ConditionalOnClass({TemplateMode.class, SpringTemplateEngine.class})
+@AutoConfigureAfter({WebMvcAutoConfiguration.class, WebFluxAutoConfiguration.class})
+public class ThymeleafAutoConfiguration {}
+```
+
+**自动配好的策略：**
+
++ 所有thymeleaf的配置都在ThymeleafProperties
+
++ 配置好了SpringTemplateEngin
+
++ 配置好了thymeleafViewResolver
+
++ 只需要直接开发页面
+
+  ```java
+  public static final String DEFAULT_PREFIX = "classpath:/templates/";
+  public static final String DEFAULT_SUFFIX = ".html";
+  ```
+
++ 防止重复提交表单的方法：重定向
 
 ## 5.5 拦截器
 

@@ -105,7 +105,7 @@ SpringMVC接收到指定的请求，就会来找到在映射关系中对应的�
 2. 标识一个方法，设置映射请求请求路径的==具体==信息
 ### 2.3 RequestMapping注解的属性
 1. value属性
-String类型的数组，可以匹配多个值，请求映射可以处理多个请求，且==value属性必须设置==
+	String类型的数组，可以匹配多个值，请求映射可以处理多个请求，且==value属性必须设置==
 	```
 	@RequestMapping(
 		value={"/test1","/test2"}
@@ -227,8 +227,9 @@ public String many(
 
 ### 3.5 @CookieValue注解
 是将cookie数据和控制器方法的形参创建映射关系，三个属性：
-==第一次执行getSesison方法的时候，cookie会存在于相应报文，从此之后就会存在于请求报文
+==第一次执行getSesison方法的时候，cookie会存在于响应报文，从此之后就会存在于请求报文
 服务器创建并且相应到浏览器之后，以后 每一次浏览器向服务器发送请求都会携带cookie==
+
 + value
 + required
 + defaultValue，用法同@RequestParam
@@ -456,7 +457,7 @@ REST：Representational State Transfer，表现层资源状态转移
 |更新操作| updateUser| user  --> put method|
 + 一点插曲：get和post的区别
 	+ 对于GET方式的请求，浏览器会把http header和data一并发送出去，服务器响应200（返回数据）；
-而对于POST，浏览器先发送header，服务器响应100 continue，浏览器再发送data，服务器响应200 ok（返回数据）。
+	  而对于POST，浏览器先发送header，服务器响应100 continue，浏览器再发送data，服务器响应200 ok（返回数据）。
 	    也就是说，GET只需要汽车跑一趟就把货送到了，而POST得跑两趟，第一趟，先去和服务器打个招呼“嗨，我等下要送一批货来，你们打开门迎接我”，然后再回头把货送过去。
 	-   GET在浏览器回退时是无害的，而POST会再次提交请求。
 	    
