@@ -1188,6 +1188,16 @@ public class DruidConfig {
    }
 ```
 
+2. stater方式
+
+```xml
+<dependency>
+   <groupId>com.alibaba</groupId>
+   <artifactId>druid-spring-boot-starter</artifactId>
+   <version>1.1.17</version>
+</dependency>
+```
+
 
 
 ### 6.1.3 整合mybatis操作
