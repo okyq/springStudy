@@ -549,7 +549,7 @@ SpringMVC功能分析都从 org.springframework.web.servlet.DispatcherServlet-�
   + SpringBoot默认禁用了矩阵变量
 
 
-    + 不使用@EnableWebMvc注解，使用@**Configuration+WebMvcConfigurer**自定义规则
+  + 不使用@EnableWebMvc注解，使用@**Configuration+WebMvcConfigurer**自定义规则
     
      ```JAVA
       @Configuration
@@ -567,7 +567,7 @@ SpringMVC功能分析都从 org.springframework.web.servlet.DispatcherServlet-�
               };
           }
       }
-      ```
+     ```
     
      ```java
           @ResponseBody
@@ -580,11 +580,11 @@ SpringMVC功能分析都从 org.springframework.web.servlet.DispatcherServlet-�
               return matrixMap;
           }
       }
-      ```
+     ```
     
     ```html
       /matrix/user;name=yuqian;name2=afe
-      ```
+    ```
 
   + 对于路径的处理，都是使用了UrlPathHelper进行解析，
 
@@ -885,19 +885,314 @@ public class ThymeleafAutoConfiguration {}
 
 + 防止重复提交表单的方法：重定向
 
+```java
+@Controller
+public class HelloController {
+    //    设置登陆页面为初始页面
+    @RequestMapping(value = {"/", "/login"})
+    public String toLogin() {
+        return "login";
+    }
+
+    //处理登陆页面发送过来的信息
+    @PostMapping("index")
+    public String toIndex(User user, Model model, HttpSession session) {
+        System.out.println(user);
+        if (user.getUsername() != null && !StringUtils.isEmpty(user.getPassword())) {
+//            登陆成功重定向到index.html,然后把登陆的信息存到session
+            session.setAttribute("user", user);
+            return "redirect:/index.html";
+
+        } else {
+            model.addAttribute("msg", "不能为空值，请输入");
+            return "login";
+        }
+    }
+
+    //专门写一个controller处理index页面
+    @RequestMapping("index.html")
+    public String index(Model model, HttpSession session) {
+        if(session.getAttribute("user")!= null){
+            return "index";
+        }
+        return "login";
+
+    }
+}
+```
+
+**抽取公共部分**
+
+...
+
+
+
 ## 5.5 拦截器
 
-## 5.6 跨域
+**登陆检查**
+
+1. 配置好拦截器要拦截哪些东西
+2. 放入容器中,实现WebMvcConfig的addInterceptors
+
+```java
+public class LoginIntercepter implements HandlerInterceptor {
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+//        登陆检查逻辑
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("user");
+        System.out.println(user);
+        if (user != null) {
+            return true;
+        }
+        else {
+            response.sendRedirect("/");
+            return false;
+        }
+
+    }
+
+```
+
+```java
+@Configuration
+public class AdminConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LoginIntercepter())
+                .addPathPatterns("/**")
+                .excludePathPatterns("/","/login","/index","/css/**");//放行静态资源和登陆的页面
+    }
+}
+```
+
+## 5.6 文件上传
+
+```html
+<h2>文件上传测试</h2>
+<form th:action="@{/fileUpload}" enctype="multipart/form-data" method="post">
+    单个文件：<input type="file" name="file">
+    多个文件：<input type="file" name="files" multiple>
+    <input type="submit" value="提交">
+</form>
+```
+
+```java
+@RequestMapping("fileUpload")
+    public String fileUpload(@RequestPart("file") MultipartFile file,
+                             @RequestPart("files") MultipartFile[] files) throws IOException {
+        if (!file.isEmpty()){
+            file.transferTo(new File("D://test//" + file.getOriginalFilename()));
+        }
+        for(MultipartFile file1:files){
+            if (!file1.isEmpty()){
+                file1.transferTo(new File("D://test//" + file1.getOriginalFilename()));
+            }
+        }
+        return "success";
+    }
+```
+
+配置最大的上传文件大小
+
+```properties
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=100MB
+```
+
+
 
 ## 5.7 异常处理
 
-## 5.8 原生组件注入
+### 5.7.1 错误处理
+
+1. 默认规则
+   + 默认情况下，Spring Boot提供 /error 处理所有错误的映射
+   + 对于**机器**客户端，它将生成JSON响应，其中包含错误，HTTP状态和异常消息的详细信息。对于**浏览器客**户端，响应一个“ whitelabel”错误视图，以 HTML格式呈现相同的数据
+2. 自定义错误页
+   + templates/error/404.html error/5xx.html；有精确的错误状态码页面就匹配精确，没有就找 4xx.html；如果都没有就触发白页
+
+## 5.8 原生组件注入（Servlet，Filter，Listener）
+
+### 5.8.1 使用Serlvet API（推荐）
+
+```java
+@WebServlet(urlPatterns = "/hello")
+public class ServletTest extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("hello");
+    }
+}
+
+同时：可以使用@WebFilter,@WebListener 注册filter和listener，都需要添加@ServletComponentScan
+```
+
+```java
+@ServletComponentScan
+@SpringBootApplication
+public class Web02Application {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Web02Application.class, args);
+    }
+
+}
+```
+
+效果：**直接响应，没有经过spring拦截器**
+
+**原因分析：**
+
+此时服务器有两个servlet：1.MyServlet，2.DispatcherServlet
+
+有多个servlet的时候会使用精确原则
+
+### 5.8.2 使用RegistrationBean
+
+ServletRegistrationBean，FilterRegistrationBean，ServletListenerRegistrationBean
+
+
+
+```java
+@Configuration
+public class MyRegistConfig {
+ 	@Bean
+ 	public ServletRegistrationBean myServlet(){
+ 		MyServlet myServlet = new MyServlet();
+ 		return new ServletRegistrationBean(myServlet,"/my","/my02");
+    }
+ 	@Bean
+ 	public FilterRegistrationBean myFilter(){
+ 		MyFilter myFilter = new MyFilter();
+// return new FilterRegistrationBean(myFilter,myServlet());
+ 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(myFilter);
+filterRegistrationBean.setUrlPatterns(Arrays.asList("/my","/css/*"));
+ 		return filterRegistrationBean;
+    }
+ 	@Bean
+ 	public ServletListenerRegistrationBean myListener(){
+ 		MySwervletContextListener mySwervletContextListener = new MySwervletContextListener();
+ 		return new ServletListenerRegistrationBean(mySwervletContextListener);
+    }
+}
+
+```
+
+
 
 ## 5.9 嵌入式web容器
+
+原理分析套路：场景starter- xxxAutoConfiguration - 导入xxx组件 - 绑定xxxProperties - 绑定配置文件项
+
+
 
 ## 5.10 定制化原理
 
 # 六 数据访问
+
+## 6.1 sql
+
+### 6.1.1 数据源的自动配置 HikariDataSource
+
+1. 导入场景
+
+```xml
+<dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jdbc</artifactId>
+</dependency>
+```
+
+没有导入驱动，导入驱动，有默认版本，但是数据库版本和驱动版本要对应
+
+```xml
+<dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.49</version>
+</dependency>
+```
+
+2. 修改配置
+
+```yaml
+spring:
+ datasource:
+ 	url: jdbc:mysql://localhost:3306/db_account
+ 	username: root
+ 	password: 123456
+ 	driver-class-name: com.mysql.jdbc.Driver
+ 
+```
+
+3. 测试
+
+```java
+class Boot05WebAdminApplicationTests {
+ @Autowired
+ JdbcTemplate jdbcTemplate;
+ @Test
+ void contextLoads() {
+// jdbcTemplate.queryForObject("select * from account_tbl")
+// jdbcTemplate.queryForList("select * from account_tbl",)
+ Long aLong = jdbcTemplate.queryForObject("select count(*) from account_tbl", Long.class);
+ log.info("记录总数：{}",aLong);
+ }
+}
+```
+
+### 6.1.2 使用Druid数据源
+
+整合第三方技术的两种方式：
+
++ 自定义
++ 找starter
+
+
+
+1. 自定义方式：
+
+```xml
+引入数据源
+<!-- https://mvnrepository.com/artifact/com.alibaba/druid -->
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>druid</artifactId>
+    <version>1.2.8</version>
+</dependency>
+
+```
+
+```java
+创建配置类
+@Configuration
+public class DruidConfig {
+
+    @Bean
+    @ConfigurationProperties(prefix = "spring.datasource")
+   public DataSource dataSource(){
+       DruidDataSource druidDataSource = new DruidDataSource();
+       return druidDataSource;
+   }
+}
+```
+
+配置druid监控页面
+
+```java
+@Bean
+    public ServletRegistrationBean servletRegistrationBean(){
+        return new ServletRegistrationBean(new StatViewServlet(),"/druid/*");
+   }
+```
+
+
+
+### 6.1.3 整合mybatis操作
+
+### 6.1.4 整合MyBatis-Plus完成CRUD
 
 # 七 单元测试
 
