@@ -1286,11 +1286,20 @@ Redis 是一个开源（BSD许可）的，内存中的数据结构存储系统�
 
 ### 6.2.1 Redis自动配置
 
+自动配置
+
++ RedisAutoConfiguration自动配置类。
++ 连接工厂是准备好的。LettuceConnectionConfiguration，JedisConnectionConfiguration
++ 自动注入RedisTemplate<object,object>：操作Redis的
++ 自动注入了StringRedisTemplate<String , String >
+
 ### 6.2.2 RedisTemplate域Lettuce
 
 ### 6.2.3 切换至jedis
 
 # 七 单元测试
+
+1. junit5具有spring5的功能
 
 # 八 指标监控
 
