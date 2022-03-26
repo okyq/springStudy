@@ -1202,6 +1202,76 @@ public class DruidConfig {
 
 ### 6.1.3 整合mybatis操作
 
+#### 1. 配置模式
+
++ 全局配置文件
++ SqlSessionFactory：自动配置好了
++ sqlSession：自动配置了SqlSessionTemplate，组合了SqlSession
++ Mapper：只要写了Mybatis的接口标注了@Mapper(也可以不写mapper，直接在启动类上方标注@MapperScan)
+
+starter
+
+springboot官方starter:`spring-boot-starter...`
+
+第三方的starter： `*-spring-boot-startet`
+
+```xml
+<groupId>org.mybatis.spring.boot</groupId>
+<artifactId>mybatis-spring-boot-starter</artifactId>
+<version>2.2.2</version>
+```
+
+可以修改配置文件中mybatis开头的 
+
+
+
+如使用纯配置模式，首先需要指定全局配置文件的位置和sql映射文件的位置
+
+```yaml
+mybatis:
+  config-location: classpath:mybatis/mybatis-config.xml
+  mapper-locations: classpath:mybatis/mapper/*.xml
+```
+
+然后写全局配置文件（也可以直接省略，直接在yaml中配置mybatis）和mapper文件
+
+```yaml
+mybatis:
+#  config-location: classpath:mybatis/mybatis-config.xml
+  mapper-locations: classpath:mybatis/mapper/*.xml
+```
+
+dao层添加mapper注解
+
+```java
+@Mapper
+public interface HelloDao {
+    public int selectAcountFromTable();
+}
+```
+
+#### 2. 使用纯注解,或者混合起来
+
+```java
+@Mapper
+public interface HelloDao {
+    public int selectAcountFromTable();
+
+//    使用纯注解
+    @Select("select count(*) from student")
+    public int selectByAnno();
+}
+```
+
+#### 3. 最佳实践
+
+1. 引入mybatis-starter
+2. 配置application.yaml中，指定mapper-location位置
+3. 编写mapper接口并标注@Mapper
+4. 简单语句直接注解，复杂语句使用mapper.xml
+
+5. 使用MapperScan简化开发
+
 ### 6.1.4 整合MyBatis-Plus完成CRUD
 
 # 七 单元测试
