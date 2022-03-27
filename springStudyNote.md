@@ -27,7 +27,7 @@
 			```
 		
 ### 2.2 ioc接口（beanFactory）
-	
+
 +  IOC思想基于IOC容器完成，IOC容器底层就是对象工厂
 + Spring提供了IOC容器实现的两种方式
 	1. BeacFactory：IOC容器的基本实现方式，是Spring内部使用的接口口，不提供开发人员进行使用（==加载配置文件的时候不会创建对象，只有在获取对象或者使用对象的时候才会创建对象==）
@@ -64,7 +64,7 @@
 			 (2)在service中调用dao中的方法
 			 (3)在spring配置文件中
 			 <property name="类中的属性名" ref="要引用的beanid"></property>
-			 ```
+			```
 		6. 注入属性，内部bean和级联属性
 			+ 一对多的关系：部门和员工
 			```
@@ -86,7 +86,9 @@
             |map类型| property标签里面加map标签，再加entry标签|
             |集合里面有对象|把value标签换成ref标签|
             |用util标签注入| xmlns:util="http://www.springframework.org/schema/util"<br>xmlns:p="http://www.springframework.org/schema/p"<br>xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd<br>http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"<br>标签就是把第一行的代码做修改
-		8.FactoryBean
+         
+			8.FactoryBean
+			
 			+ Spring有两种类型的bena，一种是普通bean，一种是工厂bean（FactoryBean）
 			+ 普通bean：在配置文件中定义的类型就是返回的类型
 			+ 工厂bean：在配置文件中定义的类型和返回的类型可以不一样（类实现FactoryBean，实现getObiect方法，返回需要的bean类型）
@@ -95,12 +97,12 @@
 	2. 在Spring里面，默认情况下是单实例的情况
 	3. 如何设置单实例还是多实例
 		+ bean标签里面的scope可以设置单实例还是多实例
-		+ singleton 表示单实例对象，加载spring配置文件的时候就会创建单实例对象
+		+  singleton 表示单实例对象，加载spring配置文件的时候就会创建单实例对象
 		+ prototype表示多实例对象，不是在加载配置文件的时候创建对象，在调用getBean()方法的时候创建多实例对象
 4. bean生命周期
 	1. 通过构造器创建bean实例（无参构造）
 	2. 为bean的属性设置值和对其他bean引用（调用set方法）
-	3. **把bean传递到后置处理器处理（实现接口BeanPostProcessor，调用方法postProcessBeforeInitialization()  ）**
+	3. **把bean传递到前置处理器处理（实现接口BeanPostProcessor，调用方法postProcessBeforeInitialization()  ）**
 	4. 调用bean的==初始化==方法（在bean标签里面设置，需要进行配置初始化的方法）
 	5. **把bean传递到后置处理器处理（实现接口BeanPostProcessor，调用方法postProcessAfterInitialization()  )**
 	6. bean可以使用了（对象获取到了）
@@ -190,7 +192,7 @@
 	4.使用proxy类
 		UserDao userDao = (UserDao) Proxy.newProxyInstance(JDKProxy.class.getClassLoader(),aa,invocationHandler);
 	
-	``` 
+	```
 ### 3.4JDK动态代理详细学习
 Java动态代理类位于java.lang.reflect包下，一般主要涉及到以下两个类：
 1. Interface InvocationHandler：该接口中仅定义了一个方法
@@ -232,8 +234,8 @@ com.springsource.org.aspectj.weaver-1.7.2.RELEASE.jar
 #### 3.6.2 切入点表达式
 1. 切入点表达式作用：知道对哪个类的哪个方法进行增强
 2. 语法结构：
-`execution([权限修饰符] [返回类型,可以省略] [类全路径][方法名称]([参数列表])`
-举例：
+	`execution([权限修饰符] [返回类型,可以省略] [类全路径][方法名称]([参数列表])`
+	举例：
 	```
 	execution(* com.yq.dao.BookDao.add(..) 
 	对BooDao中的add方法增强
