@@ -176,11 +176,11 @@
 	1. 有接口的时候使用JDK动态代理，创建接口实现类的代理对象
 	2. 没有接口的情况使用CGLIB动态代理，创建当前类子类的代理对象。增强类的方法
 ### 3.3JDK动态代理
-1. 调用newProxyInstance方法
+1. 调用**newProxyInstance**方法
 	newProxyInstance(==ClassLoader  loader==  ,  ==[类]<?>[] interfaces==   , ==invocationHandler h== )
 	第一个参数，类加载器
 	第二个参数，增强方法所在的类，这个类实现的接口，支持多个接口
-	第三个参数，实现这个接口InvocationHandler，创建代理对象，写增强的方法
+	第三个参数，实现这个接口**InvocationHandler**，创建代理对象，写增强的方法
 2. 动态代理的代码
 	```
 	1. 创建接口，定义方法
@@ -216,7 +216,7 @@ Java动态代理类位于java.lang.reflect包下，一般主要涉及到以下�
 	4. 后置通知 @AfterReturning
 	5. 环绕通知 @Around
 	6. 异常通知 @AfterThrowing	
-	7. 最终通知 @After(==ProceedingJoinPoint p==) 再用p调用p.proceed();
+	7. 最终通知 @After(==**ProceedingJoinPoint p**==) 再用p调用p.proceed();
 4. **切面**
 是动作，把通知应用到切入点的过程
 ### 3.6 AOP操作
