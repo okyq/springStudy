@@ -459,3 +459,26 @@ upstream myserver{
    
 
 # 五，动静分离
+
+动静分离从目前实现的角度来讲大致分为两种：
+
+1. 纯粹把静态文件独立成单独的域名，放在独立的服务器，也是目前主流推崇的方案
+2. 动态和静态文件混合在一起发布，通过nginx分开
+
+```bash
+在服务器存入文件/data/img/01.img
+location /img/ {
+	root /data/
+	autoindex on  #配置这个可以列出文件夹下的文件
+}
+
+此时浏览器访问：ip/data/01.img 即可访问静态资源
+```
+
+# 六，nginx高可用集群
+
+1. 什么是高可用：如果只有一台nginx，加入nginx宕机，则无法访问服务器。高可用即使用两台nginx服务器，通过keepalived进行绑定，客户端使用虚拟ip访问这两台nginx服务器。一台主服务器，一台从服务器，当主服务器发生问题时，自动将虚拟ip与从服务器进行绑定。
+
+2. 准备工作：
+   1. 两台服务器都装nginx和keepalived
+   2. 安装之后，在etc里面生成目录keepalived，有文件keepalived.cof
