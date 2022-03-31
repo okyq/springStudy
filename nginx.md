@@ -482,3 +482,4 @@ location /img/ {
 2. 准备工作：
    1. 两台服务器都装nginx和keepalived
    2. 安装之后，在etc里面生成目录keepalived，有文件keepalived.cof
+   2. .....
