@@ -26,7 +26,7 @@ redis 127.0.0.1:6379> CONFIG GET *
 redis 127.0.0.1:6379> CONFIG GET loglevel
 ```
 
-shu
+from `https://www.runoob.com/`
 
 | 1    | `daemonize no`                                               | Redis 默认不是以守护进程的方式运行，可以通过该配置项修改，使用 yes 启用守护进程（Windows 不支持守护线程的配置为 no ） |
 | ---- | :----------------------------------------------------------- | :----------------------------------------------------------- |
@@ -59,3 +59,72 @@ shu
 | 28   | `hash-max-zipmap-entries 64 hash-max-zipmap-value 512`       | 指定在超过一定的数量或者最大的元素超过某一临界值时，采用一种特殊的哈希算法 |
 | 29   | `activerehashing yes`                                        | 指定是否激活重置哈希，默认为开启（后面在介绍 Redis 的哈希算法时具体介绍） |
 | 30   | `include /path/to/local.conf`                                | 指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件 |
+
+# 二，常用五大数据类型
+
+## 2.1 redis key
+
+| 命令          | 作用                                                         |
+| ------------- | ------------------------------------------------------------ |
+| keys *        | 查看当前库中所有key                                          |
+| exists key    | 判断某个key是否存在                                          |
+| type key      | 查看key类型                                                  |
+| del key       | 删除指定的key数据                                            |
+| unlink key    | 根据value选择非阻塞删除，仅将keys从keyspace元数据删除，真正的删除会在后续异步操作 |
+| expire key 10 | 为key设置过期时间10s                                         |
+| ttl key       | 查看还有多少秒过期 -1永不过期，-2已经过期                    |
+| select        | 切换数据库（默认1-15号库）                                   |
+| dbsize        | 查看key的数量                                                |
+| flushdb       | 清空当前库                                                   |
+| flushall      | 通杀全部库                                                   |
+
+## 2.2 Redis String
+
++ String是**二进制安全**的，可以包含任意数据，比如jpg图片或者序列化对象
++ 一个value最多可以是512MB
+
+**常用命令**
+
+| 命令                                | 作用                                                         |
+| ----------------------------------- | ------------------------------------------------------------ |
+| `set <key> <value>`                 | NX：当数据库key不存在时，将key-value添加数据库<br/>XX: 与nx相反<br/>EX: 设置超时秒数<br/>PX：key的超时毫秒数，与EX互斥 |
+| `setex <key> <过期时间> <value>`    | 这是键值对的同时设置时间                                     |
+| `setnx <key> <value>`               | 只有在key不存在的时候，设置key的值                           |
+| `getset <key> <value>`              | 得到原来的值，并用新的kv替换原来的kv                         |
+| `get key`                           | 查询对应键值                                                 |
+| `append <key> <value>`              | 把value追加到原来的末尾                                      |
+| `strlen <key>`                      | 获得值的长度                                                 |
+| `incr <key>`                        | 把key中存的数字+1                                            |
+| decr <key>                          | 把key中存的数字 -1                                           |
+| `incrby /decrby <key> 步长`         | 把key中存的数字增减，自定义步长                              |
+| `mset <key> <value><key> <value>`   | 设置多个key-value                                            |
+| `mget <key> <key> <key> <key>`      | 得到多个value                                                |
+| `msetnx <key> <value><key> <value>` | 只有所有的key都不存在才会成功                                |
+| `getrange<key><起始位置><结束位置>` | 获得值的范围，类似于java中的substring                        |
+| `setrange<key><起始位置><value>`    | 从起始位置开始覆盖字符串                                     |
+
+**原子操作**：
+
+不会被线程调度机制打断的操作
+
+**数据结构**
+
+底层数据结构是动态字符串
+
+## 2.3 Redis List
+
+**简介**
+
+**单键多值**
+
+Redis列表是简单的字符串列表，按照插入的顺序排序，你可以添加一个元素到列表头部或尾部。
+
+它的底层是双向**链表**，对两端的操作性能很高，通过索引下标的操作中间的节点性能较差
+
+| 命令                       | 作用                                   |
+| -------------------------- | -------------------------------------- |
+| `lpush/rpush kvvvvv`       | 从左边/右边插入一个或者多个值          |
+| `lpop/rpop k`              | 从左边/右边吐出一个值（打印并删除）    |
+| `rpoplpush<k1><k2>`        | 从k1右边吐出一个值插入到k2左边         |
+| `lrange <key><start><end>` | 取值 0表示左边第一个，-1表示右边第一个 |
+
