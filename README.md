@@ -8,6 +8,8 @@
 
 ## [nginx](https://github.com/okyq/springStudy/blob/master/nginx.md)
 
+## [redis](https://github.com/okyq/springStudy/blob/master/redis.md)
+
 ## [javaWEB](https://github.com/okyq/springStudy/blob/master/javawebStudyNote.md)
 
 ## [mysql](https://github.com/okyq/springStudy/blob/master/mysqlStudyNote.md)
