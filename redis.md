@@ -121,10 +121,549 @@ Redis列表是简单的字符串列表，按照插入的顺序排序，你可以
 
 它的底层是双向**链表**，对两端的操作性能很高，通过索引下标的操作中间的节点性能较差
 
-| 命令                       | 作用                                   |
-| -------------------------- | -------------------------------------- |
-| `lpush/rpush kvvvvv`       | 从左边/右边插入一个或者多个值          |
-| `lpop/rpop k`              | 从左边/右边吐出一个值（打印并删除）    |
-| `rpoplpush<k1><k2>`        | 从k1右边吐出一个值插入到k2左边         |
-| `lrange <key><start><end>` | 取值 0表示左边第一个，-1表示右边第一个 |
+| 命令                                            | 作用                                   |
+| ----------------------------------------------- | -------------------------------------- |
+| `lpush/rpush kvvvvv`                            | 从左边/右边插入一个或者多个值          |
+| `lpop/rpop k`                                   | 从左边/右边吐出一个值（打印并删除）    |
+| `rpoplpush<k1><k2>`                             | 从k1右边吐出一个值插入到k2左边         |
+| `lrange <key><start><end>`                      | 取值 0表示左边第一个，-1表示右边第一个 |
+| `lindex <key> <index>`                          | 通过下标和key取出元素                  |
+| `llen<key>`                                     | 长度                                   |
+| `linsert <key> before/after <value> <newvalue>` | 在value前或者后添加一个新的值          |
+| `lrem <key> <n> <value>`                        | 从左边删除n个value                     |
+| `lset <key><index><value>`                      | 将列表key下标为index的值替换为value    |
+
+## 2.4 Redis Set
+
+简介：自动排重
+
+| 命令                               | 作用                                                         |
+| ---------------------------------- | ------------------------------------------------------------ |
+| sadd<key><value1><value2>.....     | 将一个或者多个member元素加入集合key中，已经存在的member元素将被忽略 |
+| smembers<key>                      | 取出所有值                                                   |
+| sismember <key><value>             | 判断集合<key>是否有该value的值                               |
+| scard<key>                         | 返回集合元素的个数                                           |
+| srem<key><value1><value2>          | 删除集合中的某个元素                                         |
+| spop <key>                         | 随机从该集合吐出一个值                                       |
+| srandmember<key><n>                | 随机从该集合取出n个值。不会从集合中删除                      |
+| smove <source><destination><value> | value把集合中一个值从一个集合移动到另一个集合                |
+| sinter<key1><key2>                 | 返回两个集合的交集                                           |
+| sunion<key1><key2>                 | 返回两个集合的并集                                           |
+| sdiff<k1><k2>                      | 返回两个集合的差集（只存在于k1中，不存在k2中）               |
+
+## 2.5 Redis Hash
+
+Redis hash是一个键值对集合
+
+Redis Hash 是一个String类型的field和value的映射表，hash特别适合用于存储对象。类似java里面的Map<String , Object>
+
+相当于 key ----(field,value)
+
+| 命令                                        | 作用                                                       |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| hset <key><field><value>                    | 给key集合中的 field健赋值value                             |
+| hget<key1><field>                           | 从key1集合中的field取出value                               |
+| hmset<key1><field1><value1><field2><value2> | 一次赋值多个                                               |
+| hexists<key><field>                         | 查看key中field是否存在                                     |
+| hkeys<key>                                  | 列出所有field                                              |
+| hvals<key>                                  | 列出所有value                                              |
+| hincrby <key><field><increment>             |                                                            |
+| hsetnx<key><field><value>                   | 将hash表key中的field的值设置为value，当且仅当域field不存在 |
+
+Hash类型对应的数据结构是两种：ziplist（压缩列表），hashtable（哈希表）。当field-value长度较短且个数较少时，使用ziplist，否则使用hashtale
+
+## 2.6 Redis Zset(sorted set)
+
+Zset和set不同的地方是有序集合每个成员都关联了一个评分（score），这个评分被用来按照从低到高的方式排序集合中的成员。**集合的成员是唯一的，但是评分可以是重复的**
+
+因为元素是有序的，所以你也可以很快的根据评分（score）或者次序（position）来获取一个范围的元素
+
+访问有序集合的中间元素也是非常快的，因此你能够使用有序集合作为一个没有重复成员的智能列表
+
+| 代码                                                         | 作用                                                 |
+| ------------------------------------------------------------ | ---------------------------------------------------- |
+| zadd <key> <score1> <value1><score2> <value2>.....           | 将一个或多个member元素及其score值加入到有序集key当中 |
+| zrange <key> <start>< end>（withscores）                     | 取出值(并且显示评分)                                 |
+| zrangebyscore key <minscore><maxscore>(withscores)（limit 开始 大小） | 取出在score范围内的value（并显示score）              |
+| zrevrangebyscore key <minscore><maxscore>(withscores)（limit 开始 大小） | 降序取出在score范围内的value（并显示score）          |
+| zincrby <key> <increment><value>                             | 为元素的score加上增量                                |
+| zrem<key><value>                                             | 删除集合下，指定值的元素                             |
+| zcount<key><min><max>                                        | 统计该集合下，分数区间内的元素个数                   |
+| zrank <key><value>                                           | 返回该值在集合中的排名，从0开始                      |
+
+# 三，Redis配置文件
+
+## 3.1 配置单位
+
+只支持bytes，大小写不敏感
+
+```bash
+# Redis configuration file example.
+#
+# Note that in order to read the configuration file, Redis must be
+# started with the file path as first argument:
+#
+# ./redis-server /path/to/redis.conf
+
+# Note on units: when memory size is needed, it is possible to specify
+# it in the usual form of 1k 5GB 4M and so forth:
+#
+# 1k => 1000 bytes
+# 1kb => 1024 bytes
+# 1m => 1000000 bytes
+# 1mb => 1024*1024 bytes
+# 1g => 1000000000 bytes
+# 1gb => 1024*1024*1024 bytes
+#
+# units are case insensitive so 1GB 1Gb 1gB are all the same.
+```
+
+
+
+## 3.2 includes 包含
+
+可以有其他文件
+
+````bash
+################################## INCLUDES ###################################
+
+# Include one or more other config files here.  This is useful if you
+# have a standard template that goes to all Redis servers but also need
+# to customize a few per-server settings.  Include files can include
+# other files, so use this wisely.
+#
+# Note that option "include" won't be rewritten by command "CONFIG REWRITE"
+# from admin or Redis Sentinel. Since Redis always uses the last processed
+# line as value of a configuration directive, you'd better put includes
+# at the beginning of this file to avoid overwriting config change at runtime.
+#
+# If instead you are interested in using includes to override configuration
+# options, it is better to use include as the last line.
+#
+# include /path/to/local.conf
+# include /path/to/other.conf
+````
+
+## 3.3 network
+
+```bash
+################################## NETWORK #####################################
+
+# By default, if no "bind" configuration directive is specified, Redis listens
+# for connections from all available network interfaces on the host machine.
+# It is possible to listen to just one or multiple selected interfaces using
+# the "bind" configuration directive, followed by one or more IP addresses.
+# Each address can be prefixed by "-", which means that redis will not fail to
+# start if the address is not available. Being not available only refers to
+# addresses that does not correspond to any network interfece. Addresses that
+# are already in use will always fail, and unsupported protocols will always BE
+# silently skipped.
+#
+# Examples:
+#
+# bind 192.168.1.100 10.0.0.1     # listens on two specific IPv4 addresses
+# bind 127.0.0.1 ::1              # listens on loopback IPv4 and IPv6
+# bind * -::*                     # like the default, all available interfaces
+#
+# ~~~ WARNING ~~~ If the computer running Redis is directly exposed to the
+# internet, binding to all the interfaces is dangerous and will expose the
+# instance to everybody on the internet. So by default we uncomment the
+# following bind directive, that will force Redis to listen only on the
+# IPv4 and IPv6 (if available) loopback interface addresses (this means Redis
+# will only be able to accept client connections from the same host that it is
+# running on).
+#
+# IF YOU ARE SURE YOU WANT YOUR INSTANCE TO LISTEN TO ALL THE INTERFACES
+# JUST COMMENT OUT THE FOLLOWING LINE.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bind 127.0.0.1 -::1 
+(表示只能本地连接)
+
+# Protected mode is a layer of security protection, in order to avoid that
+# Redis instances left open on the internet are accessed and exploited.
+#
+# When protected mode is on and if:
+#
+# 1) The server is not binding explicitly to a set of addresses using the
+#    "bind" directive.
+# 2) No password is configured.
+#
+# The server only accepts connections from clients connecting from the
+# IPv4 and IPv6 loopback addresses 127.0.0.1 and ::1, and from Unix domain
+# sockets.
+#
+# By default protected mode is enabled. You should disable it only if
+# you are sure you want clients from other hosts to connect to Redis
+# even if no authentication is configured, nor a specific set of interfaces
+# are explicitly listed using the "bind" directive.
+protected-mode yes
+（开启保护模式，只能本地访问）
+
+
+如果想远程访问：注释bind，把保护模式改为no
+
+
+# Accept connections on the specified port, default is 6379 (IANA #815344).
+# If port 0 is specified Redis will not listen on a TCP socket.
+port 6379
+端口号默认
+# TCP listen() backlog.
+#
+# In high requests-per-second environments you need a high backlog in order
+# to avoid slow clients connection issues. Note that the Linux kernel
+# will silently truncate it to the value of /proc/sys/net/core/somaxconn so
+# make sure to raise both the value of somaxconn and tcp_max_syn_backlog
+# in order to get the desired effect.
+tcp-backlog 511
+backlog是一个连接队列，backlog队列总和=未完成三次握手队列+已经完成三次握手队列
+# Unix socket.
+#
+# Specify the path for the Unix socket that will be used to listen for
+# incoming connections. There is no default, so Redis will not listen
+# on a unix socket when not specified.
+#
+# unixsocket /run/redis.sock
+# unixsocketperm 700
+
+# Close the connection after a client is idle for N seconds (0 to disable)
+timeout 0
+一个空闲的客户端维持多久会关闭，0表示关闭该功能。即永不关闭
+# TCP keepalive.
+#
+# If non-zero, use SO_KEEPALIVE to send TCP ACKs to clients in absence
+# of communication. This is useful for two reasons:
+#
+# 1) Detect dead peers.
+# 2) Force network equipment in the middle to consider the connection to be
+#    alive.
+#
+# On Linux, the specified value (in seconds) is the period used to send ACKs.
+# Note that to close the connection the double of the time is needed.
+# On other kernels the period depends on the kernel configuration.
+#
+# A reasonable value for this option is 300 seconds, which is the new
+# Redis default starting with Redis 3.2.1.
+tcp-keepalive 300
+检查心跳时间，每隔300检查一次
+```
+
+## 3.4 general
+
+```bash
+################################# GENERAL #####################################
+
+# By default Redis does not run as a daemon. Use 'yes' if you need it.
+# Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
+# When Redis is supervised by upstart or systemd, this parameter has no impact.
+daemonize yes
+后台启动
+# If you run Redis from upstart or systemd, Redis can interact with your
+# supervision tree. Options:
+#   supervised no      - no supervision interaction
+#   supervised upstart - signal upstart by putting Redis into SIGSTOP mode
+#                        requires "expect stop" in your upstart job config
+#   supervised systemd - signal systemd by writing READY=1 to $NOTIFY_SOCKET
+#                        on startup, and updating Redis status on a regular
+#                        basis.
+#   supervised auto    - detect upstart or systemd method based on
+#                        UPSTART_JOB or NOTIFY_SOCKET environment variables
+# Note: these supervision methods only signal "process is ready."
+#       They do not enable continuous pings back to your supervisor.
+#
+# The default is "no". To run under upstart/systemd, you can simply uncomment
+# the line below:
+#
+# supervised auto
+
+# If a pid file is specified, Redis writes it where specified at startup
+# and removes it at exit.
+#
+# When the server runs non daemonized, no pid file is created if none is
+# specified in the configuration. When the server is daemonized, the pid file
+# is used even if not specified, defaulting to "/var/run/redis.pid".
+#
+# Creating a pid file is best effort: if Redis is not able to create it
+# nothing bad happens, the server will start and run normally.
+#
+# Note that on modern Linux systems "/run/redis.pid" is more conforming
+# and should be used instead.
+pidfile /var/run/redis_6379.pid
+保存进程号
+# Specify the server verbosity level.
+# This can be one of:
+# debug (a lot of information, useful for development/testing)
+# verbose (many rarely useful info, but not a mess like the debug level)
+# notice (moderately verbose, what you want in production probably)
+# warning (only very important / critical messages are logged)
+loglevel notice
+日志级别
+# Specify the log file name. Also the empty string can be used to force
+# Redis to log on the standard output. Note that if you use standard
+# output for logging but daemonize, logs will be sent to /dev/null
+logfile ""
+设置日志的输出文件路径
+# To enable logging to the system logger, just set 'syslog-enabled' to yes,
+# and optionally update the other syslog parameters to suit your needs.
+# syslog-enabled no
+
+# Specify the syslog identity.
+# syslog-ident redis
+
+# Specify the syslog facility. Must be USER or between LOCAL0-LOCAL7.
+# syslog-facility local0
+
+# To disable the built in crash log, which will possibly produce cleaner core
+# dumps when they are needed, uncomment the following:
+#
+# crash-log-enabled no
+
+# To disable the fast memory check that's run as part of the crash log, which
+# will possibly let redis terminate sooner, uncomment the following:
+#
+# crash-memcheck-enabled no
+
+# Set the number of databases. The default database is DB 0, you can select
+# a different one on a per-connection basis using SELECT <dbid> where
+# dbid is a number between 0 and 'databases'-1
+databases 16
+默认使用16号数据库
+# By default Redis shows an ASCII art logo only when started to log to the
+# standard output and if the standard output is a TTY and syslog logging is
+# disabled. Basically this means that normally a logo is displayed only in
+# interactive sessions.
+#
+# However it is possible to force the pre-4.0 behavior and always show a
+# ASCII art logo in startup logs by setting the following option to yes.
+always-show-logo no
+
+# By default, Redis modifies the process title (as seen in 'top' and 'ps') to
+# provide some runtime information. It is possible to disable this and leave
+# the process name as executed by setting the following to no.
+set-proc-title yes
+
+# When changing the process title, Redis uses the following template to construct
+# the modified title.
+#
+# Template variables are specified in curly brackets. The following variables are
+# supported:
+#
+# {title}           Name of process as executed if parent, or type of child process.
+# {listen-addr}     Bind address or '*' followed by TCP or TLS port listening on, or
+#                   Unix socket if only that's available.
+# {server-mode}     Special mode, i.e. "[sentinel]" or "[cluster]".
+# {port}            TCP port listening on, or 0.
+# {tls-port}        TLS port listening on, or 0.
+# {unixsocket}      Unix domain socket listening on, or "".
+# {config-file}     Name of configuration file used.
+#
+proc-title-template "{title} {listen-addr} {server-mode}"
+```
+
+## 3.5 security
+
+```bash
+################################## SECURITY ###################################
+
+# Warning: since Redis is pretty fast, an outside user can try up to
+# 1 million passwords per second against a modern box. This means that you
+# should use very strong passwords, otherwise they will be very easy to break.
+# Note that because the password is really a shared secret between the client
+# and the server, and should not be memorized by any human, the password
+# can be easily a long string from /dev/urandom or whatever, so by using a
+# long and unguessable password no brute force attack will be possible.
+
+# Redis ACL users are defined in the following format:
+#
+#   user <username> ... acl rules ...
+#
+# For example:
+#
+#   user worker +@list +@connection ~jobs:* on >ffa9203c493aa99
+#
+# The special username "default" is used for new connections. If this user
+# has the "nopass" rule, then new connections will be immediately authenticated
+# as the "default" user without the need of any password provided via the
+# AUTH command. Otherwise if the "default" user is not flagged with "nopass"
+# the connections will start in not authenticated state, and will require
+# AUTH (or the HELLO command AUTH option) in order to be authenticated and
+# start to work.
+#
+# The ACL rules that describe what a user can do are the following:
+#
+#  on           Enable the user: it is possible to authenticate as this user.
+#  off          Disable the user: it's no longer possible to authenticate
+#               with this user, however the already authenticated connections
+#               will still work.
+#  skip-sanitize-payload    RESTORE dump-payload sanitation is skipped.
+#  sanitize-payload         RESTORE dump-payload is sanitized (default).
+#  +<command>   Allow the execution of that command
+#  -<command>   Disallow the execution of that command
+#  +@<category> Allow the execution of all the commands in such category
+#               with valid categories are like @admin, @set, @sortedset, ...
+#               and so forth, see the full list in the server.c file where
+#               the Redis command table is described and defined.
+#               The special category @all means all the commands, but currently
+#               present in the server, and that will be loaded in the future
+#               via modules.
+#  +<command>|subcommand    Allow a specific subcommand of an otherwise
+#                           disabled command. Note that this form is not
+#                           allowed as negative like -DEBUG|SEGFAULT, but
+#                           only additive starting with "+".
+#  allcommands  Alias for +@all. Note that it implies the ability to execute
+#               all the future commands loaded via the modules system.
+#  nocommands   Alias for -@all.
+#  ~<pattern>   Add a pattern of keys that can be mentioned as part of
+#               commands. For instance ~* allows all the keys. The pattern
+#               is a glob-style pattern like the one of KEYS.
+#               It is possible to specify multiple patterns.
+#  allkeys      Alias for ~*
+#  resetkeys    Flush the list of allowed keys patterns.
+#  &<pattern>   Add a glob-style pattern of Pub/Sub channels that can be
+#               accessed by the user. It is possible to specify multiple channel
+#               patterns.
+#  allchannels  Alias for &*
+#  resetchannels            Flush the list of allowed channel patterns.
+#  ><password>  Add this password to the list of valid password for the user.
+#               For example >mypass will add "mypass" to the list.
+#               This directive clears the "nopass" flag (see later).
+#  <<password>  Remove this password from the list of valid passwords.
+#  nopass       All the set passwords of the user are removed, and the user
+#               is flagged as requiring no password: it means that every
+#               password will work against this user. If this directive is
+#               used for the default user, every new connection will be
+#               immediately authenticated with the default user without
+#               any explicit AUTH command required. Note that the "resetpass"
+#               directive will clear this condition.
+#  resetpass    Flush the list of allowed passwords. Moreover removes the
+#               "nopass" status. After "resetpass" the user has no associated
+#               passwords and there is no way to authenticate without adding
+#               some password (or setting it as "nopass" later).
+#  reset        Performs the following actions: resetpass, resetkeys, off,
+#               -@all. The user returns to the same state it has immediately
+#               after its creation.
+#
+# ACL rules can be specified in any order: for instance you can start with
+# passwords, then flags, or key patterns. However note that the additive
+# and subtractive rules will CHANGE MEANING depending on the ordering.
+# For instance see the following example:
+#
+#   user alice on +@all -DEBUG ~* >somepassword
+#
+# This will allow "alice" to use all the commands with the exception of the
+# DEBUG command, since +@all added all the commands to the set of the commands
+# alice can use, and later DEBUG was removed. However if we invert the order
+# of two ACL rules the result will be different:
+#
+#   user alice on -DEBUG +@all ~* >somepassword
+#
+# Now DEBUG was removed when alice had yet no commands in the set of allowed
+# commands, later all the commands are added, so the user will be able to
+# execute everything.
+#
+# Basically ACL rules are processed left-to-right.
+#
+# For more information about ACL configuration please refer to
+# the Redis web site at https://redis.io/topics/acl
+
+# ACL LOG
+#
+# The ACL Log tracks failed commands and authentication events associated
+# with ACLs. The ACL Log is useful to troubleshoot failed commands blocked 
+# by ACLs. The ACL Log is stored in memory. You can reclaim memory with 
+# ACL LOG RESET. Define the maximum entry length of the ACL Log below.
+acllog-max-len 128
+
+# Using an external ACL file
+#
+# Instead of configuring users here in this file, it is possible to use
+# a stand-alone file just listing users. The two methods cannot be mixed:
+# if you configure users here and at the same time you activate the external
+# ACL file, the server will refuse to start.
+#
+# The format of the external ACL user file is exactly the same as the
+# format that is used inside redis.conf to describe users.
+#
+# aclfile /etc/redis/users.acl
+
+# IMPORTANT NOTE: starting with Redis 6 "requirepass" is just a compatibility
+# layer on top of the new ACL system. The option effect will be just setting
+# the password for the default user. Clients will still authenticate using
+# AUTH <password> as usually, or more explicitly with AUTH default <password>
+# if they follow the new protocol: both will work.
+#
+# The requirepass is not compatable with aclfile option and the ACL LOAD
+# command, these will cause requirepass to be ignored.
+#
+# requirepass foobared
+
+# New users are initialized with restrictive permissions by default, via the
+# equivalent of this ACL rule 'off resetkeys -@all'. Starting with Redis 6.2, it
+# is possible to manage access to Pub/Sub channels with ACL rules as well. The
+# default Pub/Sub channels permission if new users is controlled by the 
+# acl-pubsub-default configuration directive, which accepts one of these values:
+#
+# allchannels: grants access to all Pub/Sub channels
+# resetchannels: revokes access to all Pub/Sub channels
+#
+# To ensure backward compatibility while upgrading Redis 6.0, acl-pubsub-default
+# defaults to the 'allchannels' permission.
+#
+# Future compatibility note: it is very likely that in a future version of Redis
+# the directive's default of 'allchannels' will be changed to 'resetchannels' in
+# order to provide better out-of-the-box Pub/Sub security. Therefore, it is
+# recommended that you explicitly define Pub/Sub permissions for all users
+# rather then rely on implicit default values. Once you've set explicit
+# Pub/Sub for all existing users, you should uncomment the following line.
+#
+# acl-pubsub-default resetchannels
+
+# Command renaming (DEPRECATED).
+#
+# ------------------------------------------------------------------------
+# WARNING: avoid using this option if possible. Instead use ACLs to remove
+# commands from the default user, and put them only in some admin user you
+# create for administrative purposes.
+# ------------------------------------------------------------------------
+#
+# It is possible to change the name of dangerous commands in a shared
+# environment. For instance the CONFIG command may be renamed into something
+# hard to guess so that it will still be available for internal-use tools
+# but not available for general clients.
+#
+# Example:
+#
+# rename-command CONFIG b840fc02d524045429941cc15f59e41cb7be6c52
+#
+# It is also possible to completely kill a command by renaming it into
+# an empty string:
+#
+# rename-command CONFIG ""
+#
+# Please note that changing the name of commands that are logged into the
+# AOF file or transmitted to replicas may cause problems.
+
+
+```
+
+
+
+## 3.6 limits
+
+
+
+# 四，发布和订阅
+
+## 4.1 什么是发布和订阅
+
+Redis发布订阅（push/sub）是一种通信模式：发送者（pub）发送消息，订阅者（sub）接收消息。
+
+Redis客户端可以订阅**任意数量**的频道
+
+subscribe channel1
+
+publish channel1 hello
+
+# 五，Redis6新的数据类型
+
+
 
