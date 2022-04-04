@@ -28,8 +28,15 @@ redis 127.0.0.1:6379> CONFIG GET loglevel
 
 from `https://www.runoob.com/`
 
-| 1    | `daemonize no`                                               | Redis 默认不是以守护进程的方式运行，可以通过该配置项修改，使用 yes 启用守护进程（Windows 不支持守护线程的配置为 no ） |
+**修改redis密码：**
+
+**配置文件redis.conf中 requirepass后加密码，eg:  requirepass yuqianredis**，重启后生效，auth password认证密码
+
+检查redis是否正常：ping-pong
+
+| 编号 | 配置项                                                       | 作用                                                         |
 | ---- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| 1    | `daemonize no`                                               | Redis 默认不是以守护进程的方式运行，可以通过该配置项修改，使用 yes 启用守护进程（Windows 不支持守护线程的配置为 no ） |
 | 2    | `pidfile /var/run/redis.pid`                                 | 当 Redis 以守护进程方式运行时，Redis 默认会把 pid 写入 /var/run/redis.pid 文件，可以通过 pidfile 指定 |
 | 3    | `port 6379`                                                  | 指定 Redis 监听端口，默认端口为 6379，作者在自己的一篇博文中解释了为什么选用 6379 作为默认端口，因为 6379 在手机按键上 MERZ 对应的号码，而 MERZ 取自意大利歌女 Alessia Merz 的名字 |
 | 4    | `bind 127.0.0.1`                                             | 绑定的主机地址                                               |
@@ -137,19 +144,19 @@ Redis列表是简单的字符串列表，按照插入的顺序排序，你可以
 
 简介：自动排重
 
-| 命令                               | 作用                                                         |
-| ---------------------------------- | ------------------------------------------------------------ |
-| sadd<key><value1><value2>.....     | 将一个或者多个member元素加入集合key中，已经存在的member元素将被忽略 |
-| smembers<key>                      | 取出所有值                                                   |
-| sismember <key><value>             | 判断集合<key>是否有该value的值                               |
-| scard<key>                         | 返回集合元素的个数                                           |
-| srem<key><value1><value2>          | 删除集合中的某个元素                                         |
-| spop <key>                         | 随机从该集合吐出一个值                                       |
-| srandmember<key><n>                | 随机从该集合取出n个值。不会从集合中删除                      |
-| smove <source><destination><value> | value把集合中一个值从一个集合移动到另一个集合                |
-| sinter<key1><key2>                 | 返回两个集合的交集                                           |
-| sunion<key1><key2>                 | 返回两个集合的并集                                           |
-| sdiff<k1><k2>                      | 返回两个集合的差集（只存在于k1中，不存在k2中）               |
+| 命令                                 | 作用                                                         |
+| ------------------------------------ | ------------------------------------------------------------ |
+| `sadd<key><value1><value2>.....`     | 将一个或者多个member元素加入集合key中，已经存在的member元素将被忽略 |
+| `smembers<key>`                      | 取出所有值                                                   |
+| `sismember <key><value>`             | 判断集合<key>是否有该value的值                               |
+| `scard<key>`                         | 返回集合元素的个数                                           |
+| `srem<key><value1><value2>`          | 删除集合中的某个元素                                         |
+| `spop <key>`                         | 随机从该集合吐出一个值                                       |
+| `srandmember<key><n>`                | 随机从该集合取出n个值。不会从集合中删除                      |
+| `smove <source><destination><value>` | value把集合中一个值从一个集合移动到另一个集合                |
+| `sinter<key1><key2>`                 | 返回两个集合的交集                                           |
+| `sunion<key1><key2>`                 | 返回两个集合的并集                                           |
+| `sdiff<k1><k2>`                      | 返回两个集合的差集（只存在于k1中，不存在k2中）               |
 
 ## 2.5 Redis Hash
 
@@ -159,16 +166,16 @@ Redis Hash 是一个String类型的field和value的映射表，hash特别适合�
 
 相当于 key ----(field,value)
 
-| 命令                                        | 作用                                                       |
-| ------------------------------------------- | ---------------------------------------------------------- |
-| hset <key><field><value>                    | 给key集合中的 field健赋值value                             |
-| hget<key1><field>                           | 从key1集合中的field取出value                               |
-| hmset<key1><field1><value1><field2><value2> | 一次赋值多个                                               |
-| hexists<key><field>                         | 查看key中field是否存在                                     |
-| hkeys<key>                                  | 列出所有field                                              |
-| hvals<key>                                  | 列出所有value                                              |
-| hincrby <key><field><increment>             |                                                            |
-| hsetnx<key><field><value>                   | 将hash表key中的field的值设置为value，当且仅当域field不存在 |
+| 命令                                          | 作用                                                       |
+| --------------------------------------------- | ---------------------------------------------------------- |
+| `hset <key><field><value>`                    | 给key集合中的 field健赋值value                             |
+| `hget<key1><field>`                           | 从key1集合中的field取出value                               |
+| `hmset<key1><field1><value1><field2><value2>` | 一次赋值多个                                               |
+| `hexists<key><field>`                         | 查看key中field是否存在                                     |
+| `hkeys<key>`                                  | 列出所有field                                              |
+| `hvals<key>`                                  | 列出所有value                                              |
+| `hincrby <key><field><increment>`             |                                                            |
+| `hsetnx<key><field><value>`                   | 将hash表key中的field的值设置为value，当且仅当域field不存在 |
 
 Hash类型对应的数据结构是两种：ziplist（压缩列表），hashtable（哈希表）。当field-value长度较短且个数较少时，使用ziplist，否则使用hashtale
 
@@ -182,14 +189,14 @@ Zset和set不同的地方是有序集合每个成员都关联了一个评分（s
 
 | 代码                                                         | 作用                                                 |
 | ------------------------------------------------------------ | ---------------------------------------------------- |
-| zadd <key> <score1> <value1><score2> <value2>.....           | 将一个或多个member元素及其score值加入到有序集key当中 |
-| zrange <key> <start>< end>（withscores）                     | 取出值(并且显示评分)                                 |
-| zrangebyscore key <minscore><maxscore>(withscores)（limit 开始 大小） | 取出在score范围内的value（并显示score）              |
-| zrevrangebyscore key <minscore><maxscore>(withscores)（limit 开始 大小） | 降序取出在score范围内的value（并显示score）          |
-| zincrby <key> <increment><value>                             | 为元素的score加上增量                                |
-| zrem<key><value>                                             | 删除集合下，指定值的元素                             |
-| zcount<key><min><max>                                        | 统计该集合下，分数区间内的元素个数                   |
-| zrank <key><value>                                           | 返回该值在集合中的排名，从0开始                      |
+| `zadd <key> <score1> <value1><score2> <value2>.....`         | 将一个或多个member元素及其score值加入到有序集key当中 |
+| `zrange <key> <start>< end>（withscores）`                   | 取出值(并且显示评分)                                 |
+| `zrangebyscore key <minscore><maxscore>(withscores)（limit 开始 大小）` | 取出在score范围内的value（并显示score）              |
+| `zrevrangebyscore key <minscore><maxscore>(withscores)（limit 开始 大小）` | 降序取出在score范围内的value（并显示score）          |
+| `zincrby <key> <increment><value>`                           | 为元素的score加上增量                                |
+| `zrem<key><value>`                                           | 删除集合下，指定值的元素                             |
+| `zcount<key><min><max>`                                      | 统计该集合下，分数区间内的元素个数                   |
+| `zrank <key><value>`                                         | 返回该值在集合中的排名，从0开始                      |
 
 # 三，Redis配置文件
 
@@ -665,5 +672,53 @@ publish channel1 hello
 
 # 五，Redis6新的数据类型
 
+## 5.1 Bitmaps
+
+主要进行位操作
+
++ Bitmaps本身不是一种数据类型，实际上它是字符串（key-value），但是它可以对字符串的位进行操作
++ Bitmaps单独提供了一套命令，所以在Redis种使用Bitmaps和使用字符串的方法不太相同。可以把Bitmaps想象成一个以位为单位的数组，数组的每个单元只能存储0和1，数组的下标在Bitmaps中叫做偏移量。
+
+​		key 0101001010...
+
+| 命令                                       | 作用                                                         |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| `setbit <key> <offset> <value>`            | 设置某个偏移量的值（会返回0）                                |
+| `getbit<key><offset>`                      | 取出偏移量                                                   |
+| `bitcount<key>[start end]`                 | 取出范围内值为1的数量                                        |
+| `bitop and(or/not/xor) <destkey> [key...]` | 复合操作，and（交集）or（并集）not（非集） xor（异或）并将结果存到destkey |
 
 
+
+## 5.2 HyperLogLog
+
+**简介**
+
+Redis 在 2.8.9 版本添加了 HyperLogLog 结构。
+
+Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是，在输入元素的数量或者体积非常非常大时，计算基数所需的空间总是固定 的、并且是很小的。
+
+在 Redis 里面，每个 HyperLogLog 键只需要花费 12 KB 内存，就可以计算接近 2^64 个不同元素的基 数。这和计算基数时，元素越多耗费内存就越多的集合形成鲜明对比。
+
+但是，因为 HyperLogLog 只会根据输入元素来计算基数，而不会储存输入元素本身，所以 HyperLogLog 不能像集合那样，返回输入的各个元素。
+
+| 命令                                   | 描述                                      |
+| -------------------------------------- | ----------------------------------------- |
+| `pfadd key element[elements]`          | 添加指定元素到HyperLogLog中               |
+| `pfcount key[key....]`                 | 返回给定HyperLogLog的基数估算值           |
+| `pfmerge destkey sourcekey[sourcekey]` | 将多个 HyperLogLog 合并为一个 HyperLogLog |
+
+
+
+## 5.3 Geospatial
+
+就是地理位置，该元素是二维坐标，在地图上就是经纬度。redis基于该类型，提供了经纬度设置，查询，范围查询，距离查询，经纬度hash等常见操作
+
+| 命令                                                         | 功能                               |
+| ------------------------------------------------------------ | ---------------------------------- |
+| `geoadd <key> <longitude><latitude><member>....`             | 添加地理位置                       |
+| `geopos <key> member.....`                                   | 取出位置                           |
+| `geodist <key><member1><member2> [m/km/ft/mi]`               | 两个位置的直线距离，可以自定义单位 |
+| `georedius  <key> <longitude><latitude> <redius> [m/km/ft/mi]` | 找出某一半径内的元素               |
+
+# 六，Jedis操作redis
