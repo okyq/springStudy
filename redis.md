@@ -722,3 +722,113 @@ Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是�
 | `georedius  <key> <longitude><latitude> <redius> [m/km/ft/mi]` | 找出某一半径内的元素               |
 
 # 六，Jedis操作redis
+
+## 6.1 Jedis测试
+
+**引入依赖**
+
+```xml
+<dependency>
+    <groupId>redis.clients</groupId>
+    <artifactId>jedis</artifactId>
+    <version>4.2.1</version>
+</dependency>
+```
+
+**编写测试类**
+
+```java
+@Test
+    public void testjedis(){
+        String host = "144.24.72.***";
+        int port = 6379;
+        String pass = "yuqianredis";
+        Jedis jedis = new Jedis(host,port);
+        jedis.auth(pass);
+        String ping = jedis.ping();
+        System.out.println(ping);
+    }
+```
+
+**key**
+
+```java
+Set<String> keys = jedis.keys("*");
+```
+
+**String**
+
+```java
+jedis.set("String1","helloJedis");
+System.out.println("String1中存的是"+jedis.get("String1"));
+```
+
+**List**
+
+```java
+jedis.lpush("list2","jedis1","jedis2","jedis3");
+List<String> list2 = jedis.lrange("list2", 0, -1);
+```
+
+....方法名和命令都差不多。。。
+
+## 6.2 Springboot整合Jedis
+
+0.0
+
+# 七，事务_锁机制，秒杀
+
+## 7.1 Redis事务定义
+
+Redis事务是一个单独的隔离操作，事务中的所有命令都会序列化，按顺序执行。事务在执行过程中，不会被其他客户端发送来的命令打断
+
+Redis事务的主要作用就是**串联多个命令**防止别的命令插队
+
+## 7.2 Multi，Exec，Discard
+
+输入Multi命令开始，输入的命令都会都会依次进入到队列命令中，但是不会执行，知道输入Exec后，Redis会将之前的命令一次执行
+
+组队过程中可以使用discard来放弃组队
+
+**组队过程中**：**如果某个命令出错**，**整个队列都会取消**
+
+**执行过程中：如果某个命令出错，会跳过执行出错的命令继续执行**
+
+## 7.3 事务冲突问题
+
+### **悲观锁**：
+
+每次拿数据的时候都认为别人会修改，所以每次在拿数据的时候都会上锁，这样别人想拿这个数据就会block。传统的关系型数据库里面就用到了很多这种锁机制，比如行锁，表锁等，读锁，写锁等。都是在操作之前先上锁
+
+### **乐观锁**
+
+每次去拿数据的时候都认为别人不会修改，所以不会上锁，但是在更新的时候会判断一下在此期间别人有没有更新数据，可以使用版本号等机制。**乐观锁适用于多读的应用类型，这样可以提高吞吐量**Redis就是利用这种Check-And-Set的机制实现事务的
+
+### WATCH Key[keys ....]
+
+**在执行multi之气那，先执行watch key1[key2]，可以监视一个或多个key，如果在事务执行之前这些key被其他命令改动，那么事务会被打断**
+
+unwatch取消对所有key的监视，如果在执行watch命令之后，exec命令或discard命令先被执行了的话，那么就不需要再执行unwatch了
+
+## 7.4 Redis事务的三特性
+
+**单独的隔离操作**
+
++ 事务中的所有命令都会序列化，按请求顺序的执行。事务在执行过程中，不会被其他客户端发来的命令请求所打断
+
+**没有隔离级别的概念**
+
++ 队列中的命令没有提交之前都不会被实际执行，因为事务提交前任何指令都不会被实际执行
+
+**不保证原子性**
+
++ 事务中如果有一条命令执行失败，其后的命令仍然会被执行，没有回滚
+
+## 7.5 Redis秒杀案例
+
+1. 解决计数器和人员记录的事务操作
+
+   
+
+![](https://raw.githubusercontent.com/yqimg/img/main/20220405133634.png)
+
