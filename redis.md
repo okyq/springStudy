@@ -784,6 +784,14 @@ Redis事务是一个单独的隔离操作，事务中的所有命令都会序列
 
 Redis事务的主要作用就是**串联多个命令**防止别的命令插队
 
+| 序号 | 命令及描述                                                   |
+| :--- | :----------------------------------------------------------- |
+| 1    | [DISCARD](https://www.redis.net.cn/order/3638.html) 取消事务，放弃执行事务块内的所有命令。 |
+| 2    | [EXEC](https://www.redis.net.cn/order/3639.html) 执行所有事务块内的命令。 |
+| 3    | [MULTI](https://www.redis.net.cn/order/3640.html) 标记一个事务块的开始。 |
+| 4    | [UNWATCH](https://www.redis.net.cn/order/3641.html) 取消 WATCH 命令对所有 key 的监视。 |
+| 5    | [WATCH key [key ...\]](https://www.redis.net.cn/order/3642.html) 监视一个(或多个) key ，如果在事务执行之前这个(或这些) key 被其他命令所改动，那么事务将被打断。 |
+
 ## 7.2 Multi，Exec，Discard
 
 输入Multi命令开始，输入的命令都会都会依次进入到队列命令中，但是不会执行，知道输入Exec后，Redis会将之前的命令一次执行
@@ -832,3 +840,203 @@ unwatch取消对所有key的监视，如果在执行watch命令之后，exec命�
 
 ![](https://raw.githubusercontent.com/yqimg/img/main/20220405133634.png)
 
+# 8，Redis持久化操作
+
+## 8.1 RDB
+
+redis提供了两种不同形式的持久化方式
+
++ RDB（Redis DataBase）
++ AOF（Append OfFile)
+
+### 1. 什么是RDB
+
+在指定的时间间隔内，将内存中的数据集快照写入磁盘
+
+在 Redis 运行时， RDB 程序将当前内存中的数据库快照保存到磁盘文件中， 在 Redis 重启动时， RDB 程序可以通过载入 RDB 文件来还原数据库的状态。
+
+### 2. 备份是如何执行的
+
+Redis会单独创建（fork）一个子进程用来持久化，先将数据写入到一个临时文件中，待持久化过程都结束了，再用这个临时文件替换上次持久化好的文件。整个过程中，主进程是不进行任何io操作的，这就确保了极高性能。如果需要大规模数据恢复，且数据恢复的完整性不是非常敏感，拿RDB方式要比AOF方式更加高效。**RDB缺点是最后一次持久化后的数据可能丢失**（还没有处罚save，服务器就挂掉）
+
+### 3. fork
+
++ fork的作用是复制一个和当前进程一样的进程。新进程的所有数据（变量，环境变量，程序计数器等）数值和原进程一致，但是是一个全新的进程，并作为原进程的子进程
+
++ 在linux程序中，fork会产生一个和父进程完全相同的子进程，但子进程在此后多会exec系统调用，出于效率考虑，Linux引入“写时复制技术”
++ 一般情况下父进程和子进程会共用同一段物理内存，只有进程空间的各段内容要发生变化时，才会将父进程的内容复制一份给子进程
+
+![](https://raw.githubusercontent.com/yqimg/img/main/20220405150031.png)
+
+### 4. dump.rdb文件
+
+redis.conf中，默认文件为：dump.rdb
+
+```bash
+################################ SNAPSHOTTING  ################################
+
+# Save the DB to disk.
+#
+# save <seconds> <changes>
+#
+# Redis will save the DB if both the given number of seconds and the given
+# number of write operations against the DB occurred.
+#
+# Snapshotting can be completely disabled with a single empty string argument
+# as in following example:
+#
+# save ""
+#
+# Unless specified otherwise, by default Redis will save the DB:
+#   * After 3600 seconds (an hour) if at least 1 key changed
+#   * After 300 seconds (5 minutes) if at least 100 keys changed
+#   * After 60 seconds if at least 10000 keys changed
+#
+# You can set these explicitly by uncommenting the three following lines.
+#
+# save 3600 1
+# save 300 100
+# save 60 10000
+
+save默认禁用，不设置save命令，或者给save传入空字符串
+
+# By default Redis will stop accepting writes if RDB snapshots are enabled
+# (at least one save point) and the latest background save failed.
+# This will make the user aware (in a hard way) that data is not persisting
+# on disk properly, otherwise chances are that no one will notice and some
+# disaster will happen.
+#
+# If the background saving process will start working again Redis will
+# automatically allow writes again.
+#
+# However if you have setup your proper monitoring of the Redis server
+# and persistence, you may want to disable this feature so that Redis will
+# continue to work as usual even if there are problems with disk,
+# permissions, and so forth.
+stop-writes-on-bgsave-error yes
+
+当redis无法写入硬盘，直接关掉redis，推荐yes
+
+
+# Compress string objects using LZF when dump .rdb databases?
+# By default compression is enabled as it's almost always a win.
+# If you want to save some CPU in the saving child set it to 'no' but
+# the dataset will likely be bigger if you have compressible values or keys.
+rdbcompression yes
+
+对于存储到磁盘中的快照，可以设置是否进行压缩存储。如果是的话，redis会采用LZF算法压缩。如果不想消耗cpu资源，可以关闭。推荐yes
+
+# Since version 5 of RDB a CRC64 checksum is placed at the end of the file.
+# This makes the format more resistant to corruption but there is a performance
+# hit to pay (around 10%) when saving and loading RDB files, so you can disable it
+# for maximum performances.
+#
+# RDB files created with checksum disabled have a checksum of zero that will
+# tell the loading code to skip the check.
+rdbchecksum yes
+
+在存储快照后，还可以让redis使用cec64算法来进行数据校验，但是这样会增加大约10%的性能消耗，如果希望获取到最大的性能提升，可以关闭此功能，推荐yes
+
+# Enables or disables full sanitation checks for ziplist and listpack etc when
+# loading an RDB or RESTORE payload. This reduces the chances of a assertion or
+# crash later on while processing commands.
+# Options:
+#   no         - Never perform full sanitation
+#   yes        - Always perform full sanitation
+#   clients    - Perform full sanitation only for user connections.
+#                Excludes: RDB files, RESTORE commands received from the master
+#                connection, and client connections which have the
+#                skip-sanitize-payload ACL flag.
+# The default should be 'clients' but since it currently affects cluster
+# resharding via MIGRATE, it is temporarily set to 'no' by default.
+#
+# sanitize-dump-payload no
+
+# The filename where to dump the DB
+dbfilename dump.rdb
+
+这里配置持久化文件名称
+
+# Remove RDB files used by replication in instances without persistence
+# enabled. By default this option is disabled, however there are environments
+# where for regulations or other security concerns, RDB files persisted on
+# disk by masters in order to feed replicas, or stored on disk by replicas
+# in order to load them for the initial synchronization, should be deleted
+# ASAP. Note that this option ONLY WORKS in instances that have both AOF
+# and RDB persistence disabled, otherwise is completely ignored.
+#
+# An alternative (and sometimes better) way to obtain the same effect is
+# to use diskless replication on both master and replicas instances. However
+# in the case of replicas, diskless is not always an option.
+rdb-del-sync-files no
+
+# The working directory.
+#
+# The DB will be written inside this directory, with the filename specified
+# above using the 'dbfilename' configuration directive.
+#
+# The Append Only File will also be created inside this directory.
+#
+# Note that you must specify a directory here, not a file name.
+dir ./
+配置文件目录
+```
+
+### 5. 手动触发：save VS bgsave
+
++ save:只管保存，其他不管，全部阻塞。手动保存，不建议
++ **bgsave**：Redis**会在后台异步进行快照操作**，**快照同时还可以响应客户端请求**。
+
+### 6. 自动触发：改写配置文件中的save
+
++ save：这里是用来配置触发 Redis的 RDB 持久化条件，也就是什么时候将内存中的数据保存到硬盘。比如“save m n”。表示m秒内数据集存在n次修改时，自动触发bgsave（这个命令下面会介绍，手动触发RDB持久化的命令）
+
+　　默认如下配置：
+
+```
+save 900 1：表示900 秒内如果至少有 1 个 key 的值变化，则保存
+save 300 10：表示300 秒内如果至少有 10 个 key 的值变化，则保存
+save 60 10000：表示60 秒内如果至少有 10000 个 key 的值变化，则保存
+```
+
+当然如果你只是用Redis的缓存功能，不需要持久化，那么你可以注释掉所有的 save 行来  停用保存功能。可以直接一个空字符串来实现停用：save ""
+
++ stop-writes-on-bgsave-error ：默认值为yes。当启用了RDB且最后一次后台保存数据失败，Redis是否停止接收数据。这会让用户意识到数据没有正确持久化到磁盘上，否则没有人会注意到灾难（disaster）发生了。如果Redis重启了，那么又可以重新开始接收数据了
++ rdbcompression ；默认值是yes。对于存储到磁盘中的快照，可以设置是否进行压缩存储。如果是的话，redis会采用LZF算法进行压缩。如果你不想消耗CPU来进行压缩的话，可以设置为关闭此功能，但是存储在磁盘上的快照会比较大。
++ rdbchecksum ：默认值是yes。在存储快照后，我们还可以让redis使用CRC64算法来进行数据校验，但是这样做会增加大约10%的性能消耗，如果希望获取到最大的性能提升，可以关闭此功能。
++ dbfilename ：设置快照的文件名，默认是 dump.rdb
++ dir：设置快照文件的存放路径，这个配置项一定是个目录，而不能是文件名。默认是和当前配置文件保存在同一目录。
+
+　　也就是说通过在配置文件中配置的 save 方式，当实际操作满足该配置形式时就会进行 RDB 持久化，将当前的内存快照保存在 dir 配置的目录中，文件名由配置的 dbfilename 决定。
+
+### 7. 恢复数据
+
+将备份文件 (dump.rdb) 移动到 redis 安装目录并启动服务即可，redis就会自动加载文件数据至内存了。Redis 服务器在载入 RDB 文件期间，会一直处于阻塞状态，直到载入工作完成为止。
+
+### 8. 停止持久化
+
+有些情况下，我们只想利用Redis的缓存功能，并不像使用 Redis 的持久化功能，那么这时候我们最好停掉 RDB 持久化。可以通过上面讲的在配置文件 redis.conf 中，可以注释掉所有的 save 行来停用保存功能或者直接一个空字符串来实现停用：save ""
+
+　　也可以通过命令：
+
+```
+redis-cli config set save ``" "
+```
+
+### 9.RDB优势和劣势
+
++ **优势**
+
+　　1.RDB是一个非常紧凑(compact)的文件，它保存了redis 在某个时间点上的数据集。这种文件非常适合用于进行备份和灾难恢复。
+
+　　2.生成RDB文件的时候，redis主进程会fork()一个子进程来处理所有保存工作，主进程不需要进行任何磁盘IO操作。
+
+　　3.RDB 在恢复大数据集时的速度比 AOF 的恢复速度要快。
+
++ **劣势**
+
+　　1、RDB方式数据没办法做到实时持久化/秒级持久化。因为bgsave每次运行都要执行fork操作创建子进程，属于重量级操作，如果不采用压缩算法(内存中的数据被克隆了一份，大致2倍的膨胀性需要考虑，这里评论区指出，确实有不妥，主进程 fork 出子进程，其实是共享一份真实的内存空间，但是为了能在记录快照的时候，也能让主线程处理写操作，采用的是 Copy-On-Write（写时复制）技术，只有需要修改的内存才会复制一份出来，所以内存膨胀到底有多大，看修改的比例有多大)，频繁执行成本过高(影响性能)
+
+　　2、RDB文件使用特定二进制格式保存，Redis版本演进过程中有多个格式的RDB版本，存在老版本Redis服务无法兼容新版RDB格式的问题(版本不兼容)
+
+　　3、在一定间隔时间做一次备份，所以如果redis意外down掉的话，就会丢失最后一次快照后的所有修改(数据有丢失)
