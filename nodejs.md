@@ -314,6 +314,39 @@ const fs = require('fs')
 ## 5.4 model对象
 
 - 自定义模块中都有一个 `module` 对象，存储了和当前模块有关的信息
+
 - 在自定义模块中，可以使用 `module.exports` 对象，将模块内的成员共享出去，供外界使用。导入自定义模块时，得到的就是 `module.exports` 指向的对象。
+
 - 默认情况下，`exports` 和 `module.exports` 指向同一个对象。最终共享的结果，以 **`module.exports`** 指向的对象为准。
 
+  ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220425154937.png)
+
++ 第三个，因为是一个对象，所以会有两个属性
+
+## 5.5 CommonJS模块化规范
+
+- 每个模块内部，`module` 变量代表当前模块
+- `module` 变量是一个对象，`module.exports` 是对外的接口
+- 加载某个模块即加载该模块的 `module.exports` 属性
+
+# 6 npm与包
+
++ 包是基于内置模块封装出来的，提供了更高级，更方便的api，极大提高了开发效率
+
++ 从哪里下载？`npmjs.com`， 
+
+**怎么下载包**
+
++ 下载`registry.npmjs.com`
++ 包管理工具：Node Package Manage
++ npm i moment 指定版本 npm i moment@2.24.0
++ 接收： const moment = require('moment')
+
+**快速创建package.json**
+
+npm init -y
+
++ 只能在英文的目录下运行
++ npm install命令安装的时候，npm会自动记录package.json
+
++ dependencies节点会记录装了哪些包
