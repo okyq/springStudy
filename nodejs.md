@@ -238,6 +238,8 @@ const http = require('http')
 const server = http.createServer()
 
 // 为服务器实例绑定 request 事件，监听客户端的请求
+// req是客户端相关的属性
+// res是服务器端相关的属性
 server.on('request', function (req, res) {
   const url = req.url
   const method = req.method
@@ -246,7 +248,7 @@ server.on('request', function (req, res) {
 
   // 设置 Content-Type 响应头，解决中文乱码的问题
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  // 向客户端响应内容
+  // 向客户端响应内容，并结束服务器
   res.end(str)
 })
 
@@ -254,4 +256,64 @@ server.listen(8080, function () {
   console.log('server running at http://127.0.0.1:8080')
 })
 ```
+
+根据不同url相应不同的url
+
+```javascript
+const http = require('http')
+const server = http.createServer()
+
+server.on('request', (req, res) => {
+  const url = req.url
+  // 设置默认的响应内容为 404 Not found
+  let content = '<h1>404 Not found!</h1>'
+  // 判断用户请求的是否为 / 或 /index.html 首页
+  // 判断用户请求的是否为 /about.html 关于页面
+  if (url === '/' || url === '/index.html') {
+    content = '<h1>首页</h1>'
+  } else if (url === '/about.html') {
+    content = '<h1>关于页面</h1>'
+  }
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.end(content)
+})
+
+server.listen(80, () => {
+  console.log('server running at http://127.0.0.1')
+})
+```
+
+# 5. 模块化
+
+- 模块化是指解决一个复杂问题时，自顶向下逐层把系统划分为若干模块的过程，模块是可组合、分解和更换的单元。
+- 模块化可提高代码的复用性和可维护性，实现按需加载。
+- 模块化规范是对代码进行模块化拆分和组合时需要遵守的规则，如使用何种语法格式引用模块和向外暴露成员。
+
+## 5.1 Node.js中的模块的分类
+
+- 内置模块（内置模块是官方提供的，例如fs，path等）
+- 自定义模块(用户创建的js文件，都是自定义模块)
+- 第三方模块（由第三方开发出来的模块，使用前需要下载）
+
+## 5.2 加载模块
+
+使用require() 方法加载模块
+
+```javascript
+const fs = require('fs')
+```
+
+使用require方法加载其他模块的时候，会执行被加载模块中的代码
+
+## 5.3 模块作用域
+
+- 和函数作用域类似，在自定义模块中定义的变量、方法等成员，只能在当前模块内被访问，这种模块级别的访问限制，叫做模块作用域
+- 防止全局变量污染
+
+## 5.4 model对象
+
+- 自定义模块中都有一个 `module` 对象，存储了和当前模块有关的信息
+- 在自定义模块中，可以使用 `module.exports` 对象，将模块内的成员共享出去，供外界使用。导入自定义模块时，得到的就是 `module.exports` 指向的对象。
+- 默认情况下，`exports` 和 `module.exports` 指向同一个对象。最终共享的结果，以 **`module.exports`** 指向的对象为准。
 
