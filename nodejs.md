@@ -335,14 +335,16 @@ const fs = require('fs')
 
 + 从哪里下载？`npmjs.com`， 
 
-**怎么下载包**
+## 6.1 怎么下载包
 
 + 下载`registry.npmjs.com`
 + 包管理工具：Node Package Manage
 + npm i moment 指定版本 npm i moment@2.24.0
 + 接收： const moment = require('moment')
 
-**快速创建package.json**
+
+
+## 6.2 快速创建package.json
 
 npm init -y
 
@@ -350,3 +352,27 @@ npm init -y
 + npm install命令安装的时候，npm会自动记录package.json
 
 + dependencies节点会记录装了哪些包
+
+
+
+## 6.3 一次性安装所有包
+
++ npm install命令会读取package.json中的dependencies并安装
+
+
+
+## 6.4 卸载包
+
++ npm uninstall moment 卸载之后会自动从packages.json中自动移除
+
+## 6.5 devDependencies节点
+
+如果某些包只在开发阶段会用到，在项目上线之后不会用到，则建议把这些包记录在devDependencies
+
++ `npm i 包名 -D` 安装指定的包，并记录到devDependencies
+
+## 6.6 切换镜像源
+
++ 切换镜像源`npm config set registry=https://registry.npm.taobao.org`
+
++ 也可以使用 nrm 工具 快捷切换和查看镜像源
