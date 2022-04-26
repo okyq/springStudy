@@ -376,3 +376,39 @@ npm init -y
 + 切换镜像源`npm config set registry=https://registry.npm.taobao.org`
 
 + 也可以使用 nrm 工具 快捷切换和查看镜像源
+
+## 6.7 模块的加载机制
+
++ **模块优先从缓存中加载**，模块第一次加载后会被缓存，即多次调用 `require()` 不会导致模块的代码被执行多次，提高模块加载效率。
+
++ **内置模块加载优先级最高**
+
++ **自定义模块加载**
+
+  + 加载自定义模块时，路径要以 `./` 或 `../` 开头，否则会作为内置模块或第三方模块加载。
+
+    导入自定义模块时，若省略文件扩展名，则 Node.js 会按顺序尝试加载文件：
+
+    + 按确切的文件名加载
+    + 补全 `.js` 扩展名加载
+    + 补全 `.json` 扩展名加载
+    + 补全 `.node` 扩展名加载
+    + 报错
+
++ **第三方模块加载**
+
+  + 如果传递给require() 的模块标识符不是一个内置模块，也没有以 **`./`** or **`../`**开头，则Node.js会从当前模块的**父目录**开始，尝试从**`/node_modules`**文件夹中加载第三方模块
+  + 如果没有找到对应的第三方模块，则移动到再**上一层父目录**中，进行加载，直到**文件系统的根目录**。
+
+  例如，假设在 `C:\Users\bruce\project\foo.js` 文件里调用了 `require('tools')`，则 Node.js 会按以下顺序查找：
+
+  - `C:\Users\bruce\project\node_modules\tools`
+  - `C:\Users\bruce\node_modules\tools`
+  - `C:\Users\node_modules\tools`
+  - `C:\node_modules\tools`
+
++ **目录作为模块加载**
+
+  + 在被加载的目录下查找 `package.json` 的文件，并寻找 `main` 属性，作为 `require()` 加载的入口
+  + 如果没有 `package.json` 文件，或者 `main` 入口不存在或无法解析，则 Node.js 将会试图加载目录下的 `index.js` 文件。
+  + 若失败则报错
