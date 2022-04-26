@@ -1,4 +1,3 @@
-# 只想学习不想说话
 # 一些尚硅谷的笔记和自己总结的东西
 # 有些没写完，有些可能有错
 
@@ -26,3 +25,14 @@
 
 ## [springboot](https://github.com/okyq/springStudy/tree/master/springboot)
 
+## [RabbitMQPDF](https://github.com/okyq/springStudy/blob/master/RabbitMQ.pdf)
+
+## [RabbitMQ](https://github.com/okyq/springStudy/blob/master/RabbitMQ.md)
+
+# 后端开卷，下面是前端
+
+## [nodejs](https://github.com/okyq/springStudy/blob/master/nodejs.md)
+
+## [vue](https://github.com/okyq/springStudy/blob/master/vue.md)
+
+## [TypeScript](https://github.com/okyq/springStudy/blob/master/TypeScript.md)
