@@ -1,11 +1,11 @@
-# 1. Node.js简介
+# 一. Node.js简介
 
 1. Node.js是一个基于**ChromeV8引擎**的JavaScript运行环境（nodejs.org/zh-cn)
 2. Node.js中是JavaScript后端运行环境
 
 
 
-# 2. fs文件系统模块
+# 二. fs文件系统模块
 
 - 引入fs 
 
@@ -161,7 +161,7 @@ fs.writeFile('C:/Users/hello.txt', '通过 writeFile 写入的内容', { flag: '
 
 - `fs.watchFile(filename[, options], listener)`
 
-# 3. path路径模块
+# 三. path路径模块
 
 path 模块是 Node.js 官方提供的、用来处理路径的模块。它提供了一系列的方法和属性，用来满足用户对路径的处理需求。
 
@@ -227,7 +227,7 @@ const fext = path.extname(fpath)
 console.log(fext) // .html
 ```
 
-# 4. http模块学习
+# 四. http模块学习
 
 http 模块是 Node.js 官方提供的、用来创建 web 服务器的模块
 
@@ -284,7 +284,7 @@ server.listen(80, () => {
 })
 ```
 
-# 5. 模块化
+# 五. 模块化
 
 - 模块化是指解决一个复杂问题时，自顶向下逐层把系统划分为若干模块的过程，模块是可组合、分解和更换的单元。
 - 模块化可提高代码的复用性和可维护性，实现按需加载。
@@ -329,7 +329,7 @@ const fs = require('fs')
 - `module` 变量是一个对象，`module.exports` 是对外的接口
 - 加载某个模块即加载该模块的 `module.exports` 属性
 
-# 6 npm与包
+# 六 npm与包
 
 + 包是基于内置模块封装出来的，提供了更高级，更方便的api，极大提高了开发效率
 
@@ -412,3 +412,54 @@ npm init -y
   + 在被加载的目录下查找 `package.json` 的文件，并寻找 `main` 属性，作为 `require()` 加载的入口
   + 如果没有 `package.json` 文件，或者 `main` 入口不存在或无法解析，则 Node.js 将会试图加载目录下的 `index.js` 文件。
   + 若失败则报错
+
+
+
+# 七 Express
+
+## 7.1 什么是Express
+
+Express是基于Node.js快速，开放，极简的Web开发框架
+
+## 7.2 基本使用
+
+安装
+
+```bash
+npm install express
+```
+
+创建服务器，监听客户端请求，并返回内容：
+
+```js
+const express = require('express')
+// 创建 web 服务器
+const app = express()
+
+// 监听客户端的 GET 和 POST 请求，并向客户端响应具体的内容
+app.get('/user', (req, res) => {
+  res.send({ name: 'zs', age: 20, gender: '男' })
+})
+app.post('/user', (req, res) => {
+  res.send('请求成功')
+})
+
+app.get('/', (req, res) => {
+  // 通过 req.query 可以获取到客户端发送过来的查询参数
+  console.log(req.query)
+  res.send(req.query)
+})
+
+// 这里的 :id 是一个动态的参数
+app.get('/user/:ids/:username', (req, res) => {
+  // req.params 是动态匹配到的 URL 参数，默认是一个空对象
+  console.log(req.params)
+  res.send(req.params)
+})
+
+app.listen(80, () => {
+  console.log('express server running at http://127.0.0.1')
+})
+```
+
+.....公司没用 ，不看了
