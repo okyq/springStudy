@@ -39,6 +39,11 @@ function sum(a:number,b:number) : number{
     return a+b;
 }
 
+```
+
+2.2 类似常量
+
+```tsx
 //这样把a的值限制为10 类似于常量
 let a : 10;
 //或者取或，用|连接多个类型，这样a的值是male或者famale
@@ -47,6 +52,10 @@ let a: "male"| "female"
 //联合类型
 let c: boolean| string;
 
+```
+
+
+```tsx
 //any表示任意类型,一个变量设置为any后，相当于对any关闭了类型检测
 let d : any;
 //直接声明的时候不指定类型，也是any
@@ -54,13 +63,62 @@ let d;
 //any可以赋值给任意变量
 let s : string;
 s=d;
+```
 
+```tsx
 //unknow表示位置类型
 let e :unknow 
 // unknow 不能赋值给别的对象,实际上是一个类型安全的变量
 //=是赋值操作，==先转换类型再比较，===先判断类型，如果不是同一类型直接为false。
+s = e //报错
+//可以使用类型断言 变量 as 类型  或者  <类型>变量
+//s=<string>e or s = e as string
 
 ```
+
+```tsx
+
+//void 表示空，以函数为例，就表示没有返回值的函数
+function fn():void{}
+```
+
+```tsx
+
+//never 表示永远不会有结果，不会是任何值
+function fn2(): never{
+    throw new Error('报错了');
+}
+
+```
+
+
+
+对象
+
+```typescript
+//object表示一个对象
+let a : object;
+
+//{}用来指定对象中包含哪些属性
+// 语法 {属性名：属性值，属性名：属性值}
+let b : {name:string , age:number}
+
+//在属性后面加一个？ 表示属性可选
+let b : {name :string, age?:number}
+
+//[propName:string]:any 表示任意属性
+let c: {name:string , [propName:string]:any}
+c={name:'yuqian',a:'a',b:'b',c:'c'}
+
+//限制函数d的结构  =>返回值
+let d : (a: number,b: number)=>number;
+```
+
+
+
+array
+
+
 
 + 类型：
 
