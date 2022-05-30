@@ -10,7 +10,7 @@
 - 引入fs 
 
 ```javascript
-const fs = require('fs')
+const fs = require('fs');
 ```
 
 - fs 模块中所有的操作都有两种形式可供选择:同步和异步
