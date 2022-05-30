@@ -117,6 +117,8 @@ public RestTemplate restTemplate(){
 
 # Nacos
 
+## 1. 服务注册到Nacos
+
 ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220530173203.png)
 
 ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220530173242.png)
@@ -124,3 +126,9 @@ public RestTemplate restTemplate(){
 只用修改配置文件，不用修改里面的sqlurl
 
 ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220530173801.png)
+
+## 2. 服务跨集群调用问题
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220530175149.png)
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220530175302.png)
