@@ -132,3 +132,25 @@ public RestTemplate restTemplate(){
 ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220530175149.png)
 
 ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220530175302.png)
+
+## 3. 环境隔离
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531171230.png)
+
+增加命名空间
+
+![image-20220531171444312](C:\Users\yuqian\AppData\Roaming\Typora\typora-user-images\image-20220531171444312.png)
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531171547.png)
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531171721.png)
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531171749.png)
+
+## 4. nacos注册中心细节分析
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531174044.png)
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531174215.png)
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531174549.png)
