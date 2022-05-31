@@ -154,3 +154,7 @@ public RestTemplate restTemplate(){
 ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531174215.png)
 
 ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531174549.png)
+
+## 5. Nacos配置管理
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531175543.png)
