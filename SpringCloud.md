@@ -197,6 +197,26 @@ public RestTemplate restTemplate(){
 
 # 四，http客户端Feign
 
+## 1. Feign的基本使用
+
 ![image-20220601160929837](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601160929837.png)
 
 ![image-20220601161042164](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601161042164.png)
+
+![image-20220601161253329](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601161253329.png)
+
+用Feign调用
+
+![image-20220601161626431](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601161626431.png)
+
+其中Feign内部集成了Ribbon，直接可以负载均衡
+
+![image-20220601161744854](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601161744854.png)
+
+
+
+## 2. 自定义Feign配置
+
+![image-20220601161900621](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601161900621.png)
+
+![image-20220601164926259](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601164926259.png)
