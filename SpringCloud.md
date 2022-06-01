@@ -1,4 +1,4 @@
-# Eureka
+# 一，Eureka
 
 ## 1. 搭建注册中心
 
@@ -101,7 +101,7 @@ public RestTemplate restTemplate(){
 }
 ```
 
-# Ribbon负载均衡
+# 二，Ribbon负载均衡
 
 ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220530155940.png)
 
@@ -115,7 +115,7 @@ public RestTemplate restTemplate(){
 
 ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220530163403.png)
 
-# Nacos
+# 三，Nacos
 
 ## 1. 服务注册到Nacos
 
@@ -158,3 +158,45 @@ public RestTemplate restTemplate(){
 ## 5. Nacos配置管理
 
 ![](https://cdn.jsdelivr.net/gh/yqimg/img/20220531175543.png)
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220601145008.png)
+
+![](https://cdn.jsdelivr.net/gh/yqimg/img/20220601145023.png)
+
+![image-20220601151453828](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601151453828.png)
+
+![image-20220601151600137](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601151600137.png)
+
+![image-20220601151933848](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601151933848.png)
+
+## 6. 配置热更新
+
+![image-20220601152333738](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601152333738.png)
+
+![image-20220601152351903](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601152351903.png)
+
+![image-20220601152746935](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601152746935.png)
+
+## 7. 多环境配置共享
+
+![image-20220601152928394](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601152928394.png)
+
+![image-20220601154530560](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601154530560.png)
+
+![image-20220601154542947](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601154542947.png)
+
+## 8. Nacos集群搭建
+
+![image-20220601154751954](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601154751954.png)
+
+![image-20220601154818948](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601154818948.png)
+
+![image-20220601154900136](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601154900136.png)
+
+![image-20220601155857540](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601155857540.png)
+
+# 四，http客户端Feign
+
+![image-20220601160929837](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601160929837.png)
+
+![image-20220601161042164](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601161042164.png)
