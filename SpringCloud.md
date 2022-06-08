@@ -1,3 +1,5 @@
+# 感谢黑马的课程
+
 # 一，Eureka
 
 ## 1. 搭建注册中心
@@ -220,3 +222,65 @@ public RestTemplate restTemplate(){
 ![image-20220601161900621](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601161900621.png)
 
 ![image-20220601164926259](https://cdn.jsdelivr.net/gh/okyq/img/image-20220601164926259.png)
+
+## 3. Feign性能优化
+
+![image-20220602094503535](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602094503535.png)
+
+![image-20220602094642357](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602094642357.png)
+
+![image-20220602095005664](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602095005664.png)
+
+## 4. 最佳实践
+
+![image-20220602095443180](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602095443180.png)
+
+![image-20220602095636345](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602095636345.png)
+
+![image-20220602095703965](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602095703965.png)
+
+![image-20220602102121325](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602102121325.png)
+
+这样抽取之后，以后所有的微服务中，只要有需要UserClient的微服务就可以通过引用feign-api来调用。
+
+![image-20220602102258355](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602102258355.png)
+
+![image-20220602102758360](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602102758360.png)
+
+# 五，统一网关Gateway
+
+## 1. 网关的作用
+
+![image-20220602103248954](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602103248954.png)
+
+![image-20220602103541204](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602103541204.png)
+
+![image-20220602103735845](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602103735845.png)
+
+## 2. 搭建网关
+
+![image-20220602103816927](https://cdn.jsdelivr.net/gh/okyq/img/image-20220602103816927.png)
+
+![image-20220608163903913](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608163903913.png)
+
+## 3. 路由断言工厂
+
+![image-20220608164619017](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608164619017.png)
+
+![image-20220608164802992](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608164802992.png)
+
+![image-20220608164819136](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608164819136.png)
+
+## 4. 路由过滤器
+
+![image-20220608165524811](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608165524811.png)
+
+![image-20220608165643841](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608165643841.png)
+
+eg
+
+![image-20220608165816320](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608165816320.png)
+
+![image-20220608165918216](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608165918216.png)
+
+![image-20220608170033237](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608170033237.png)
