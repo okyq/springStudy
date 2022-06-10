@@ -284,3 +284,55 @@ eg
 ![image-20220608165918216](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608165918216.png)
 
 ![image-20220608170033237](https://cdn.jsdelivr.net/gh/okyq/img/image-20220608170033237.png)
+
+## 5. 全局过滤器
+
+![image-20220609133525186](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609133525186.png)
+
+![image-20220609133541445](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609133541445.png)
+
+![image-20220609134157286](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609134157286.png)
+
+![image-20220609134120826](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609134120826.png)
+
+定义顺序的时候还可以实现Order接口并实现Order方法
+
+![image-20220609134338888](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609134338888.png)
+
+![image-20220609134415327](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609134415327.png)
+
+## 6. 过滤器执行顺序
+
+![image-20220609134847473](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609134847473.png)
+
+![image-20220609135116198](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609135116198.png)
+
+## 7. 跨域问题解决
+
+![image-20220609140515446](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609140515446.png)
+
+![image-20220609140652026](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609140652026.png)
+
+# 六，Docker
+
+## 1. 初识Docker
+
+![image-20220609142021493](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609142021493.png)
+
+**镜像和容器**
+
+![image-20220609142649360](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609142649360.png)
+
+![image-20220609142927440](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609142927440.png)
+
+## 2. 安装
+
+### 3. 常用命令
+
+![image-20220609154704736](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609154704736.png)
+
+![image-20220609155948152](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609155948152.png)
+
+![image-20220609162744390](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609162744390.png)
+
+![image-20220609163212839](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609163212839.png)
