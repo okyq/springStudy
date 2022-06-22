@@ -327,7 +327,7 @@ eg
 
 ## 2. 安装
 
-### 3. 常用命令
+## 3. 常用命令
 
 ![image-20220609154704736](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609154704736.png)
 
@@ -336,3 +336,5 @@ eg
 ![image-20220609162744390](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609162744390.png)
 
 ![image-20220609163212839](https://cdn.jsdelivr.net/gh/okyq/img/image-20220609163212839.png)
+
+![image-20220610162008653](https://cdn.jsdelivr.net/gh/okyq/img/image-20220610162008653.png)
